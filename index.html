@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Aikido">
+<meta name="theme-color" content="#3B6D11">
+<title>Aikido Begriffe</title>
+<style>
+:root {
+  --primary:#3B6D11;--primary-light:#EAF3DE;--primary-mid:#639922;
+  --accent:#BA7517;--accent-light:#FAEEDA;
+  --danger:#A32D2D;--danger-light:#FCEBEB;
+  --success:#0F6E56;--success-light:#E1F5EE;
+  --bg:#ffffff;--surface:#f5f5f3;--text:#1a1a1a;--muted:#6b6b6b;
+  --border:rgba(0,0,0,0.12);--radius:14px;--radius-md:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:var(--bg);}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--text);}
+#app{max-width:480px;margin:0 auto;padding:1rem;min-height:100vh;}
+.screen{display:none;}.screen.active{display:block;}
+.header{text-align:center;padding:2rem 0 1rem;}
+.header h1{font-size:24px;font-weight:600;}
+.header p{font-size:14px;color:var(--muted);margin-top:4px;}
+.btn{display:block;width:100%;padding:15px;border-radius:var(--radius);border:none;cursor:pointer;font-size:16px;font-weight:600;transition:all 0.15s;margin-bottom:10px;}
+.btn:active{transform:scale(0.98);opacity:.85;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-secondary{background:var(--primary-light);color:var(--primary);}
+.btn-accent{background:var(--accent);color:#fff;}
+.btn-ghost{background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;}
+.btn-sm{display:inline-block;width:auto;padding:9px 18px;font-size:14px;margin:4px;}
+.nav-back{background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:0 0 1rem 0;display:flex;align-items:center;gap:4px;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:1rem 0;}
+.stat{background:var(--surface);border-radius:var(--radius-md);padding:12px 8px;text-align:center;}
+.stat .num{font-size:24px;font-weight:600;}.stat .lbl{font-size:11px;color:var(--muted);margin-top:2px;}
+.progress-bar{background:var(--surface);border-radius:20px;height:8px;overflow:hidden;margin:.5rem 0;}
+.progress-fill{height:100%;background:var(--primary);border-radius:20px;transition:width .4s;}
+.mode-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:14px;}
+.mode-card:active{transform:scale(.99);}
+.mode-icon{font-size:30px;flex-shrink:0;}
+.mode-title{font-size:16px;font-weight:600;}
+.mode-desc{font-size:13px;color:var(--muted);margin-top:2px;}
+
+/* Karteikarte */
+.card-flip{perspective:900px;height:270px;margin:1rem 0;cursor:pointer;user-select:none;}
+.card-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .5s;}
+.card-flip.flipped .card-inner{transform:rotateY(180deg);}
+.card-face{position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.25rem;overflow:hidden;}
+.card-back-face{transform:rotateY(180deg);background:var(--primary-light);border-color:var(--primary-mid);}
+.clabel{font-size:11px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;flex-shrink:0;}
+.cterm{font-size:24px;font-weight:600;text-align:center;line-height:1.2;}
+.chint{font-size:12px;color:var(--muted);margin-top:10px;flex-shrink:0;}
+.card-back-face .clabel{color:var(--primary);}.card-back-face .cterm{color:var(--primary);}
+.card-img{width:100%;max-height:130px;object-fit:cover;border-radius:8px;margin-bottom:8px;flex-shrink:0;}
+.rating-row{display:flex;gap:8px;margin-top:.75rem;}.rating-row .btn{margin:0;}
+
+/* Quiz */
+.quiz-question-box{background:var(--surface);border-radius:var(--radius);margin:1rem 0;overflow:hidden;min-height:100px;}
+.quiz-img{width:100%;max-height:200px;object-fit:cover;display:block;}
+.quiz-term-inner{padding:1rem 1.25rem;text-align:center;}
+.quiz-term{font-size:26px;font-weight:700;}.quiz-cat{font-size:12px;color:var(--muted);margin-top:6px;}
+.answers-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:.75rem;}
+.answer-btn{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px 10px;cursor:pointer;font-size:14px;font-weight:500;text-align:center;transition:all .2s;line-height:1.3;min-height:64px;display:flex;align-items:center;justify-content:center;gap:8px;}
+.answer-btn .letter{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--surface);font-size:12px;font-weight:700;flex-shrink:0;}
+.answer-btn:active{transform:scale(.97);}
+.answer-btn.correct{background:var(--success-light);border-color:var(--success);color:var(--success);}
+.answer-btn.wrong{background:var(--danger-light);border-color:var(--danger);color:var(--danger);}
+.answer-btn[disabled]{cursor:default;}
+.score-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;}
+.score-display{font-size:20px;font-weight:700;color:var(--accent);}
+.badge{display:inline-block;background:var(--primary-light);color:var(--primary);font-size:12px;padding:4px 12px;border-radius:20px;font-weight:600;}
+.level-badge{display:inline-flex;align-items:center;gap:6px;background:var(--accent-light);color:var(--accent);border-radius:20px;padding:6px 16px;font-size:14px;font-weight:600;}
+.congrats{text-align:center;padding:2.5rem 0;}
+.congrats .icon{font-size:56px;margin-bottom:1rem;}
+.congrats h2{font-size:22px;font-weight:700;margin-bottom:8px;}
+.congrats p{color:var(--muted);font-size:14px;}
+.points-pop{position:fixed;top:38%;left:50%;transform:translate(-50%,-50%);font-size:34px;font-weight:700;pointer-events:none;animation:popUp .9s ease forwards;z-index:999;color:var(--primary);}
+@keyframes popUp{0%{opacity:0;transform:translate(-50%,-65%)}30%{opacity:1;transform:translate(-50%,-50%)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-30%)}}
+
+/* Liste */
+.list-item{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.list-item .jp{font-size:15px;font-weight:600;}.list-item .de{font-size:13px;color:var(--muted);margin-top:2px;}
+.list-thumb{width:44px;height:44px;object-fit:cover;border-radius:6px;flex-shrink:0;}
+.list-thumb-ph{width:44px;height:44px;background:var(--surface);border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.due-now{background:var(--accent-light);color:var(--accent);font-size:11px;padding:3px 10px;border-radius:10px;white-space:nowrap;font-weight:600;flex-shrink:0;}
+.due-later{background:var(--primary-light);color:var(--primary);font-size:11px;padding:3px 10px;border-radius:10px;white-space:nowrap;font-weight:600;flex-shrink:0;}
+.category-pill{display:inline-block;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:13px;margin:3px;cursor:pointer;color:var(--text);}
+.category-pill.active{background:var(--primary-light);color:var(--primary);border-color:var(--primary);font-weight:600;}
+
+/* Admin */
+.admin-item{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;margin-bottom:8px;}
+.admin-item-row{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.admin-item .jp{font-size:15px;font-weight:600;}.admin-item .de{font-size:13px;color:var(--muted);margin-top:2px;}
+.admin-item .cat-tag{font-size:11px;background:var(--surface);padding:2px 10px;border-radius:10px;color:var(--muted);display:inline-block;margin-top:6px;}
+.admin-item .img-tag{font-size:11px;background:var(--primary-light);color:var(--primary);padding:2px 10px;border-radius:10px;display:inline-block;margin-top:6px;margin-left:4px;}
+.admin-btns{display:flex;gap:6px;flex-shrink:0;}
+.icon-btn{background:none;border:none;cursor:pointer;font-size:18px;padding:6px;border-radius:8px;}
+.icon-btn:active{background:var(--surface);}
+.form-box{background:var(--surface);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem;}
+.form-box h3{font-size:15px;font-weight:600;margin-bottom:.75rem;}
+.form-row{margin-bottom:12px;}
+.form-row label{font-size:12px;color:var(--muted);display:block;margin-bottom:5px;font-weight:500;}
+.form-row input,.form-row select{width:100%;padding:11px 14px;border-radius:var(--radius-md);border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:15px;}
+.form-row input:focus,.form-row select:focus{outline:none;border-color:var(--primary);}
+.img-hint{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.6;}
+.img-hint code{background:var(--bg);padding:1px 5px;border-radius:4px;font-family:monospace;}
+.img-preview{width:100%;max-height:120px;object-fit:cover;border-radius:var(--radius-md);margin-top:8px;display:none;}
+
+/* PIN */
+.pin-screen{text-align:center;padding:3rem 1rem;}
+.pin-screen h2{font-size:20px;font-weight:700;margin-bottom:6px;}
+.pin-screen p{font-size:13px;color:var(--muted);margin-bottom:1.75rem;}
+.pin-dots{display:flex;gap:14px;justify-content:center;margin-bottom:1.75rem;}
+.pin-dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);background:var(--surface);transition:all .15s;}
+.pin-dot.filled{background:var(--primary);border-color:var(--primary);transform:scale(1.1);}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:260px;margin:0 auto;}
+.pin-key{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);padding:18px;font-size:22px;font-weight:600;cursor:pointer;text-align:center;transition:all .1s;}
+.pin-key:active{background:var(--primary-light);transform:scale(.95);}
+.pin-error{color:var(--danger);font-size:13px;margin-top:.75rem;min-height:20px;font-weight:500;}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- HOME -->
+<div id="home" class="screen active">
+  <div class="header">
+    <div style="font-size:44px;margin-bottom:8px;">🥋</div>
+    <h1>Aikido Begriffe</h1>
+    <p>Lerne japanische Fachbegriffe</p>
+  </div>
+  <div class="stat-grid" id="home-stats"></div>
+  <div class="progress-bar"><div class="progress-fill" id="home-progress" style="width:0%"></div></div>
+  <p style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:1.5rem;" id="progress-label"></p>
+  <div class="mode-card" onclick="startQuiz()">
+    <div class="mode-icon">🎯</div>
+    <div><div class="mode-title">Quiz-Modus</div><div class="mode-desc">4 Antworten – wähle die richtige! Punkte sammeln.</div></div>
+  </div>
+  <div class="mode-card" onclick="startLearning()">
+    <div class="mode-icon">🃏</div>
+    <div><div class="mode-title">Karteikarten</div><div class="mode-desc">Karte umdrehen und selbst bewerten (Spaced Repetition)</div></div>
+  </div>
+  <button class="btn btn-secondary" style="margin-top:4px;" onclick="showScreen('list')">Alle Begriffe ansehen</button>
+  <button class="btn-ghost btn" onclick="showPin()" style="margin-top:2px;">⚙️ Sensei-Bereich</button>
+</div>
+
+<!-- PIN -->
+<div id="pin" class="screen">
+  <button class="nav-back" onclick="showScreen('home')">← Zurück</button>
+  <div class="pin-screen">
+    <div style="font-size:36px;margin-bottom:10px;">🔐</div>
+    <h2>Sensei-Bereich</h2><p>Bitte PIN eingeben</p>
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot"></div><div class="pin-dot"></div>
+      <div class="pin-dot"></div><div class="pin-dot"></div>
+    </div>
+    <div class="pin-pad">
+      <button class="pin-key" onclick="pinPress('1')">1</button>
+      <button class="pin-key" onclick="pinPress('2')">2</button>
+      <button class="pin-key" onclick="pinPress('3')">3</button>
+      <button class="pin-key" onclick="pinPress('4')">4</button>
+      <button class="pin-key" onclick="pinPress('5')">5</button>
+      <button class="pin-key" onclick="pinPress('6')">6</button>
+      <button class="pin-key" onclick="pinPress('7')">7</button>
+      <button class="pin-key" onclick="pinPress('8')">8</button>
+      <button class="pin-key" onclick="pinPress('9')">9</button>
+      <button class="pin-key" style="font-size:16px;" onclick="pinClear()">⌫</button>
+      <button class="pin-key" onclick="pinPress('0')">0</button>
+      <div></div>
+    </div>
+    <div class="pin-error" id="pin-error"></div>
+    <p style="font-size:11px;color:var(--muted);margin-top:1.5rem;">Standard-PIN: 1234</p>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="admin" class="screen">
+  <button class="nav-back" onclick="showScreen('home')">← Zurück zur App</button>
+  <h2 style="font-size:20px;font-weight:700;margin-bottom:1rem;">⚙️ Sensei-Bereich</h2>
+  <div class="form-box">
+    <h3 id="form-title">Neuen Begriff hinzufügen</h3>
+    <div class="form-row"><label>Japanisch</label><input id="f-jp" placeholder="z.B. Shomenuchi"/></div>
+    <div class="form-row"><label>Deutsch</label><input id="f-de" placeholder="z.B. Schlag von oben auf Scheitel"/></div>
+    <div class="form-row">
+      <label>Kategorie</label>
+      <select id="f-cat" onchange="catChanged()">
+        <option>Grundlagen</option><option>Etikette</option><option>Rollen</option>
+        <option>Techniken</option><option>Bewegungen</option><option>Ukemi</option>
+        <option>Angriffe</option><option>Waffen</option><option>Neu...</option>
+      </select>
+    </div>
+    <div class="form-row" id="f-newcat-row" style="display:none;">
+      <label>Neue Kategorie</label><input id="f-newcat" placeholder="Kategoriename"/>
+    </div>
+    <div class="form-row">
+      <label>Bild (optional)</label>
+      <input id="f-img" placeholder="bilder/ikkyo.jpg" oninput="previewImg()"/>
+      <p class="img-hint">
+        Pfad zum Bild relativ zur HTML-Datei.<br>
+        Beispiel: Foto liegt in <code>bilder/ikkyo.jpg</code> → einfach <code>bilder/ikkyo.jpg</code> eingeben.<br>
+        Formate: jpg, png, webp
+      </p>
+      <img id="f-img-preview" class="img-preview" alt="Vorschau" onerror="this.style.display='none'"/>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-primary btn-sm" onclick="saveCard()" id="save-btn">Hinzufügen</button>
+      <button class="btn btn-secondary btn-sm" onclick="cancelEdit()" id="cancel-btn" style="display:none;">Abbrechen</button>
+    </div>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
+    <span style="font-size:15px;font-weight:600;">Begriffe verwalten</span>
+    <span class="badge" id="admin-count"></span>
+  </div>
+  <div id="admin-filter" style="margin-bottom:1rem;"></div>
+  <div id="admin-list"></div>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz" class="screen">
+  <button class="nav-back" onclick="showScreen('home')">← Zurück</button>
+  <div class="score-bar">
+    <span class="score-display" id="q-score">0 Punkte</span>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:13px;color:var(--muted);font-weight:600;" id="q-streak"></span>
+      <span class="badge" id="q-counter">1/10</span>
+    </div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="q-progress" style="width:10%"></div></div>
+  <div class="quiz-question-box" id="q-question-box"></div>
+  <div class="answers-grid" id="q-answers"></div>
+  <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:12px;">Welche Bedeutung hat dieser Begriff?</p>
+</div>
+
+<!-- QUIZ DONE -->
+<div id="quizdone" class="screen">
+  <div class="congrats">
+    <div class="icon" id="qd-icon">🏆</div>
+    <h2 id="qd-title">Super gemacht!</h2><p id="qd-sub"></p>
+    <div class="stat-grid" style="margin:1.5rem 0;" id="qd-stats"></div>
+    <div style="margin-bottom:1.25rem;" id="qd-level"></div>
+    <button class="btn btn-accent" onclick="startQuiz()">Nochmal spielen</button>
+    <button class="btn btn-secondary" onclick="showScreen('home')">Zur Übersicht</button>
+  </div>
+</div>
+
+<!-- KARTEIKARTEN -->
+<div id="learn" class="screen">
+  <button class="nav-back" onclick="showScreen('home')">← Zurück</button>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
+    <span id="learn-counter" style="font-size:13px;color:var(--muted);">1/10</span>
+    <span class="badge" id="learn-category">Grundlagen</span>
+  </div>
+  <div class="card-flip" id="flashcard" onclick="flipCard()">
+    <div class="card-inner">
+      <div class="card-face" id="card-front-face"></div>
+      <div class="card-face card-back-face">
+        <span class="clabel" style="color:var(--primary);">Bedeutung</span>
+        <span class="cterm" id="card-back-text" style="color:var(--primary);">—</span>
+      </div>
+    </div>
+  </div>
+  <div id="rating-area" style="display:none;">
+    <p style="text-align:center;font-size:13px;color:var(--muted);margin-bottom:10px;">Wie gut kanntest du es?</p>
+    <div class="rating-row">
+      <button class="btn btn-sm" style="background:var(--danger-light);color:var(--danger);flex:1;" onclick="rate(1)">Nochmal</button>
+      <button class="btn btn-sm" style="background:var(--accent-light);color:var(--accent);flex:1;" onclick="rate(3)">So la la</button>
+      <button class="btn btn-sm" style="background:var(--primary-light);color:var(--primary);flex:1;" onclick="rate(5)">Super!</button>
+    </div>
+  </div>
+  <div id="flip-hint" style="text-align:center;margin-top:1rem;">
+    <p style="font-size:13px;color:var(--muted);">Tippe auf die Karte zum Umdrehen</p>
+  </div>
+</div>
+
+<!-- LEARN DONE -->
+<div id="done" class="screen">
+  <div class="congrats">
+    <div class="icon">🏆</div>
+    <h2>Super gemacht!</h2><p>Alle fälligen Karten für heute gelernt.</p>
+    <div class="stat-grid" style="margin:1.5rem 0;" id="done-stats"></div>
+    <button class="btn btn-primary" onclick="showScreen('home')">Zurück zur Übersicht</button>
+  </div>
+</div>
+
+<!-- LISTE -->
+<div id="list" class="screen">
+  <button class="nav-back" onclick="showScreen('home')">← Zurück</button>
+  <h2 style="font-size:20px;font-weight:700;margin-bottom:1rem;">Alle Begriffe</h2>
+  <div id="cat-filter" style="margin-bottom:1rem;"></div>
+  <div id="word-list"></div>
+</div>
+
+</div>
+<script>
+const DEFAULT_CARDS=[
+  {jp:"Aikido",de:"Weg der harmonischen Kraft",cat:"Grundlagen",img:"bilder/357252c205-aikido kanji.png"},
+  {jp:"Aiki",de:"Vereinigung der Kräfte",cat:"Grundlagen",img:"bilder/Aiki.png"},
+  {jp:"Dojo",de:"Übungsraum",cat:"Grundlagen",img:""},
+  {jp:"Sensei",de:"Lehrer",cat:"Grundlagen",img:""},
+  {jp:"Sempai",de:"Älterer Schüler",cat:"Grundlagen",img:""},
+  {jp:"Kohai",de:"Jüngerer Schüler",cat:"Grundlagen",img:""},
+  {jp:"Tatami",de:"Matte",cat:"Grundlagen",img:""},
+  {jp:"Gi / Dogi",de:"Übungsanzug",cat:"Grundlagen",img:"bilder/Uwagi transparent.png"},
+  {jp:"Hakama",de:"Weite Übungshose",cat:"Grundlagen",img:"bilder/Hakama.png"},
+  {jp:"Obi",de:"Gürtel",cat:"Grundlagen",img:"bilder/Obi.png"},
+  {jp:"Kamae",de:"Haltung / Stellung",cat:"Grundlagen",img:""},
+  {jp:"Hanmi",de:"Schrittstellung",cat:"Grundlagen",img:""},
+  {jp:"Ma-ai",de:"Optimaler Kampfabstand",cat:"Grundlagen",img:"bilder/Maai 2.png"},
+  {jp:"Zanshin",de:"Wachsame Aufmerksamkeit nach Technik",cat:"Grundlagen",img:""},
+  {jp:"Ki",de:"Lebensenergie / innere Kraft",cat:"Grundlagen",img:"bilder/Ki.jpg"},
+  {jp:"Ai-Kamae",de:"Harmonische Stellung, beide haben die gleiche Seite vorn",cat:"Grundlagen",img:"bilder/Ai Kamae 2.png"},
+  {jp:"Gyaku-Kamae",de:"gespiegelte Stellung",cat:"Grundlagen",img:"bilder/Gyaku Kamae.png"},
+  {jp:"O-Sensei Morihei Ueshiba",de:"\"Großer Lehrer\", Begründer des Aikido",cat:"Grundlagen",img:"bilder/O_Sensei.jpg"},
+  {jp:"Aiki-Otoshi",de:"Aushebewurf",cat:"Grundlagen",img:"bilder/Aiki Otoshi 3.png"},
+  {jp:"Ude-Kime-Nage",de:"Armhebelwurf",cat:"Grundlagen",img:"bilder/Ude Kime Nage.png"},
+  {jp:"Randori",de:"\"Das Chaos ergreifen\", freier Angriff und Verteidigung",cat:"Grundlagen",img:"bilder/Randori.png"},
+  {jp:"Ichi",de:"1, \"Itsch\"",cat:"Grundlagen",img:""},
+  {jp:"Ni",de:"Zwei",cat:"Grundlagen",img:""},
+  {jp:"San",de:"Drei",cat:"Grundlagen",img:""},
+  {jp:"Shi",de:"Vier, \"Schi\", auch Yon, wenn man Personen zählt",cat:"Grundlagen",img:""},
+  {jp:"Go",de:"Fünf",cat:"Grundlagen",img:""},
+  {jp:"Rokku",de:"Sechs, \"Rock\"",cat:"Grundlagen",img:""},
+  {jp:"Shichi",de:"Sieben, \"Schitsch\", auch Nana",cat:"Grundlagen",img:""},
+  {jp:"Hachi",de:"Acht, \"Hatsch\"",cat:"Grundlagen",img:""},
+  {jp:"Kyu",de:"Neun",cat:"Grundlagen",img:""},
+  {jp:"Ju",de:"Zehn, \"Dschu\", wie Dschungel",cat:"Grundlagen",img:""},
+  {jp:"Rei",de:"Verbeugung / Gruß",cat:"Etikette",img:"bilder/Rei im Stand.png"},
+  {jp:"Mokuso",de:"Stille Meditation",cat:"Etikette",img:"bilder/Seiza seitlich transparent.png"},
+  {jp:"Seiza",de:"Kniesitz",cat:"Etikette",img:"bilder/Hinsetzen.png"},
+  {jp:"Uke",de:"Empfänger der Technik",cat:"Rollen",img:""},
+  {jp:"Nage / Tori",de:"Ausführender der Technik",cat:"Rollen",img:""},
+  {jp:"Shite",de:"Ausführende Person",cat:"Rollen",img:""},
+  {jp:"Ude Osae Irimi",de:"\"Ikkyo\", Erste Technik (Armhebel), direkter Eingang",cat:"Techniken",img:"bilder/Ude Osae Irimi 2.png"},
+  {jp:"Ude Osae Tenkan",de:"\"Ikkyo\", Erste Technik (Armhebel), drehender Eingang",cat:"Techniken",img:"bilder/Ude Osae Tenkan.png"},
+  {jp:"Kote Mawashi",de:"Nikyo, Zweite Technik (Handgelenk)",cat:"Techniken",img:"bilder/Kote Mawashi.png"},
+  {jp:"Kote Hineri",de:"Sankyo, Dritte Technik (Drehgriff)",cat:"Techniken",img:"bilder/Kote Hineri 3.png"},
+  {jp:"Tekubi Osae",de:"Yonkyo, Vierte Technik (Druckpunkt)",cat:"Techniken",img:"bilder/Tekubi Osae Irimi.png"},
+  {jp:"Ude Nobashi",de:"Gokyo, Fünfte Technik",cat:"Techniken",img:"bilder/Ude Nobashi.png"},
+  {jp:"Irimi-Nage",de:"Eintrittswurf",cat:"Techniken",img:"bilder/Irimi Nage 4 transparent.png"},
+  {jp:"Shiho-Nage",de:"Vier-Seiten-Wurf (Wurf in alle Richtungen)",cat:"Techniken",img:"bilder/Shiho Nage 3.png"},
+  {jp:"Kote-Gaeshi",de:"Handgelenksauswärtsdrehung",cat:"Techniken",img:"bilder/Kote Gaeshi transparent.png"},
+  {jp:"Tenchi-Nage",de:"Himmel-Erde-Wurf",cat:"Techniken",img:"bilder/Tenchi Nage 3.png"},
+  {jp:"Kaiten-Nage Uchi",de:"Radwurf, innerer Eingang",cat:"Techniken",img:"bilder/Kaiten Nage Soto 2.png"},
+  {jp:"Kaiten-Nage Soto",de:"Radwurf, äußerer Eingang",cat:"Techniken",img:"bilder/Kaiten Nage Soto 1.png"},
+  {jp:"Kokyu-Nage",de:"Atemkraftwurf, Gruppe von Würfen",cat:"Techniken",img:""},
+  {jp:"Juji-Garami",de:"Armkreuzwurf",cat:"Techniken",img:"bilder/Juji Garami transparent.png"},
+  {jp:"Koshi-Nage",de:"Hüftwurf",cat:"Techniken",img:"bilder/Koshi Nage transparent.png"},
+  {jp:"Koshi-Nage Kote-Hineri",de:"Hüftwurf mit Kote-Hineri-Unterstützung",cat:"Techniken",img:"bilder/Koshi Nage Kote Hineri.png"},
+  {jp:"O-Soto-Otoshi",de:"Großer Außensturz",cat:"Techniken",img:"bilder/O Soto Otoshi.png"},
+  {jp:"Uki-Goshi",de:"Eingedrehter Hüftwurf",cat:"Techniken",img:"bilder/Uki Goshi.png"},
+  {jp:"Morote-Gari",de:"Doppelhand-Sichel",cat:"Techniken",img:"bilder/Morote Gari.png"},
+  {jp:"Sumi-Otoshi",de:"Eckenkippe",cat:"Techniken",img:"bilder/Sumi Otoshi.png"},
+  {jp:"Kokyu-Ho aus Zaho",de:"Übung zur Aufnahme von Kraft bei Griffen im Sitzen",cat:"Techniken",img:"bilder/Kokyu Ho aus Zaho.png"},
+  {jp:"Irimi",de:"Eintretendes Prinzip",cat:"Bewegungen",img:""},
+  {jp:"Tenkan",de:"Drehbewegung, Raum gebendes Prinzip",cat:"Bewegungen",img:""},
+  {jp:"Omote",de:"\"Davor\"",cat:"Bewegungen",img:""},
+  {jp:"Ura",de:"\"Dahinter\"",cat:"Bewegungen",img:""},
+  {jp:"Mae",de:"Vorwärts",cat:"Bewegungen",img:""},
+  {jp:"Ushiro",de:"Rückwärts, von hinten",cat:"Bewegungen",img:""},
+  {jp:"Hidari",de:"Links",cat:"Bewegungen",img:""},
+  {jp:"Migi",de:"Rechts",cat:"Bewegungen",img:""},
+  {jp:"Irimi-Ashi",de:"Eintretender Schritt mit Drehung",cat:"Bewegungen",img:"bilder/Irimi Ashi.png"},
+  {jp:"Tenkan-Ashi",de:"Rückwärtsdrehung mit Schritt",cat:"Bewegungen",img:"bilder/Tenkan Ashi.png"},
+  {jp:"Tsugi-Ashi",de:"Nachstellschritt",cat:"Bewegungen",img:"bilder/Tsugi Ashi.png"},
+  {jp:"Tai-Sabaki",de:"Ausweichen mit zwei Schritten, \"Ran und weg\"",cat:"Bewegungen",img:"bilder/Tai Sabaki 2.png"},
+  {jp:"Hidari-Kamae",de:"Linke Stellung",cat:"Bewegungen",img:"bilder/Hidari Kamae.png"},
+  {jp:"Migi-Kamae",de:"Rechte Stellung",cat:"Bewegungen",img:"bilder/Migi Kamae.png"},
+  {jp:"Shikko",de:"Gehen auf den Knien",cat:"Bewegungen",img:"bilder/Shikko.png"},
+  {jp:"Shizentai",de:"Neutrale Stellung",cat:"Bewegungen",img:"bilder/Shizentai.png"},
+  {jp:"Ayumi-Ashi",de:"Sich überholender Schritt",cat:"Bewegungen",img:"bilder/Ayumi Ashi.png"},
+  {jp:"Atemi",de:"Schläge oder Schritte zur Kontrolle des Gegners",cat:"Bewegungen",img:"bilder/Atemi.png"},
+  {jp:"Ukemi",de:"Falltechniken",cat:"Ukemi",img:""},
+  {jp:"Mae-Mawaru-Ukemi",de:"Vorwärtsrolle",cat:"Ukemi",img:"bilder/Mae Mawaru Ukemi 2.png"},
+  {jp:"Ushiro-Mawaru-Ukemi",de:"Rückwärtsrolle",cat:"Ukemi",img:"bilder/Ushiro Mawaru Ukemi.png"},
+  {jp:"Yoko-Ukemi",de:"Seitwärts stürzen",cat:"Ukemi",img:"bilder/yoko-ukemi-3.jpg"},
+  {jp:"Ushiro-Ukemi",de:"Rückwärts stürzen",cat:"Ukemi",img:"bilder/Ushiro Ukemi.png"},
+  {jp:"Mae-Ukemi",de:"Vorwärts stürzen",cat:"Ukemi",img:"bilder/mae Ukemi transparent.png"},
+  {jp:"Hanmi-Hantachi",de:"Angriff auf Sitzenden durch stehenden Partner",cat:"Ukemi",img:"bilder/Hanmi Hantachi.png"},
+  {jp:"Suwari-Waza",de:"Techniken im Sitzen",cat:"Ukemi",img:"bilder/Suwari Waza 2.png"},
+  {jp:"Katate-Tori Ai-Hanmi",de:"Einhandgriff am Handgelenk, aus gleicher Stellung",cat:"Angriffe",img:"bilder/Katate Tori Ai Hanmi.png"},
+  {jp:"Katate-Tori Gyaku-Hanmi",de:"Einhandgriff am Handgelenk, aus gespiegelter Stellung",cat:"Angriffe",img:"bilder/Katate Tori Gyaku Hanmi.png"},
+  {jp:"Katate-Ryote-Tori",de:"Zweihandgriff am Arm",cat:"Angriffe",img:"bilder/Katate Ryote Tori.png"},
+  {jp:"Ryote-Tori",de:"Zwei Hände fassen zwei Hände",cat:"Angriffe",img:"bilder/Ryote Tori.png"},
+  {jp:"Shomen-Tsuki",de:"Gerader Faustschlag",cat:"Angriffe",img:"bilder/Shomen Tsuki.png"},
+  {jp:"Shomen-Uchi",de:"Schlag von oben auf den Kopf",cat:"Angriffe",img:"bilder/Shomen Uchi.png"},
+  {jp:"Yokomen-Uchi",de:"Schlag auf die Seite des Kopfes",cat:"Angriffe",img:"bilder/Yokomen Uchi.png"},
+  {jp:"Ushiro-Kakae-Tori",de:"Umklammern von Hinten",cat:"Angriffe",img:"bilder/Ushiro Kakae Tori.png"},
+  {jp:"Ushiro-Katate-Tori-Kubi-Shime.",de:"Fassen plus Würgen von Hinten",cat:"Angriffe",img:"bilder/Ushiro Katate Tori Kubi Shime.png"},
+  {jp:"Ushiro-Ryokata-Tori",de:"Schultern von hinten fassen",cat:"Angriffe",img:"bilder/Ushiro Ryokata Tori.png"},
+  {jp:"Ushiro-Ryote-Tori",de:"Hände von hinten greifen",cat:"Angriffe",img:"bilder/ushiro-ryote-dori.jpg"},
+  {jp:"Ushiro-Eri-Tori",de:"Kragen von hinten fassen",cat:"Angriffe",img:"bilder/ushiro-eri-dori.jpg"},
+  {jp:"Mae-Geri",de:"Gerader Tritt",cat:"Angriffe",img:"bilder/mae-geri.jpg"},
+  {jp:"Ken / Katana",de:"Schwert",cat:"Waffen",img:""},
+  {jp:"Jo",de:"Stab",cat:"Waffen",img:"bilder/Aiki Jo.png"},
+  {jp:"Bokken / Bokuto",de:"Holzschwert",cat:"Waffen",img:""},
+  {jp:"Tanto",de:"Messer (Holz)",cat:"Waffen",img:"bilder/Aiki Tanto Jutsu.png"},
+  {jp:"Mune Gatame",de:"Brustfesthalte",cat:"Bodenkampf",img:"bilder/Mune Gatame 1.png"},
+  {jp:"Kesa-Gatame",de:"Schärpenfesthalte",cat:"Bodenkampf",img:"bilder/Kesa_gatame.png"},
+  {jp:"Tate-Shiho-Gatame",de:"Festhalte in Reiterstellung",cat:"Bodenkampf",img:"bilder/Tate-shiho-gatame transparent 1.png"},
+  {jp:"Do-Jime",de:"Körperklammer",cat:"Bodenkampf",img:"bilder/Do Jime 2 transparent.png"},
+];
+
+// ⚙️ PIN HIER ÄNDERN:
+const ADMIN_PIN='1234';
+
+const CARDS_KEY='aikido_cards',SM2_KEY='aikido_sm2',SCORE_KEY='aikido_score';
+const LEVELS=[
+  {min:0,label:"Weißgurt",icon:"🤍"},{min:50,label:"Gelbgurt",icon:"💛"},
+  {min:150,label:"Orangegurt",icon:"🧡"},{min:300,label:"Grüngurt",icon:"💚"},
+  {min:500,label:"Blaugurt",icon:"💙"},{min:800,label:"Braugurt",icon:"🤎"},
+  {min:1200,label:"Schwarzgurt",icon:"🖤"},
+];
+let CARDS=[],sm2={},totalScore=0,streak=0,editIdx=-1,adminFilter='Alle',pinInput='';
+
+function getLevel(p){let l=LEVELS[0];for(const v of LEVELS){if(p>=v.min)l=v;}return l;}
+function loadData(){
+  try{CARDS=JSON.parse(localStorage.getItem(CARDS_KEY))||JSON.parse(JSON.stringify(DEFAULT_CARDS));}catch(e){CARDS=JSON.parse(JSON.stringify(DEFAULT_CARDS));}
+  CARDS=CARDS.map(c=>({img:"",...c}));
+  try{sm2=JSON.parse(localStorage.getItem(SM2_KEY))||{};}catch(e){sm2={};}
+  try{totalScore=parseInt(localStorage.getItem(SCORE_KEY))||0;}catch(e){totalScore=0;}
+}
+function saveData(){
+  localStorage.setItem(CARDS_KEY,JSON.stringify(CARDS));
+  localStorage.setItem(SM2_KEY,JSON.stringify(sm2));
+  localStorage.setItem(SCORE_KEY,String(totalScore));
+}
+function getCardSM(jp){return sm2[jp]||{interval:0,ef:2.5,due:0,rep:0};}
+function isDue(jp){return Date.now()>=getCardSM(jp).due;}
+function applyRating(jp,q){
+  let c=getCardSM(jp);
+  if(q<3){c.rep=0;c.interval=1;}
+  else{if(c.rep===0)c.interval=1;else if(c.rep===1)c.interval=6;else c.interval=Math.round(c.interval*c.ef);c.rep++;}
+  c.ef=Math.max(1.3,c.ef+0.1-(5-q)*(0.08+(5-q)*0.02));
+  c.due=Date.now()+c.interval*86400000;sm2[jp]=c;
+}
+function getLearnedCount(){return CARDS.filter(c=>getCardSM(c.jp).rep>0).length;}
+function getDueCards(){return CARDS.filter(c=>isDue(c.jp));}
+function shuffle(a){return[...a].sort(()=>Math.random()-.5);}
+function rand4(correct,all){return shuffle([correct.de,...shuffle(all.filter(c=>c.jp!==correct.jp)).slice(0,3).map(c=>c.de)]);}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');window.scrollTo(0,0);
+  if(id==='home')updateHome();if(id==='list')renderList();if(id==='admin')renderAdmin();
+}
+function updateHome(){
+  const due=getDueCards().length,learned=getLearnedCount(),total=CARDS.length,lv=getLevel(totalScore);
+  document.getElementById('home-stats').innerHTML=`
+    <div class="stat"><div class="num">${totalScore}</div><div class="lbl">Punkte</div></div>
+    <div class="stat"><div class="num">${due}</div><div class="lbl">Fällig</div></div>
+    <div class="stat"><div class="num">${learned}</div><div class="lbl">Gelernt</div></div>`;
+  const pct=total>0?Math.round(learned/total*100):0;
+  document.getElementById('home-progress').style.width=pct+'%';
+  document.getElementById('progress-label').textContent=`${lv.icon} ${lv.label} · ${learned} von ${total} Karten gelernt`;
+}
+
+// PIN
+function showPin(){pinInput='';updatePinDots();document.getElementById('pin-error').textContent='';showScreen('pin');}
+function pinPress(d){if(pinInput.length>=4)return;pinInput+=d;updatePinDots();if(pinInput.length===4)setTimeout(checkPin,200);}
+function pinClear(){pinInput=pinInput.slice(0,-1);updatePinDots();}
+function updatePinDots(){document.querySelectorAll('.pin-dot').forEach((d,i)=>d.classList.toggle('filled',i<pinInput.length));}
+function checkPin(){
+  if(pinInput===ADMIN_PIN){showScreen('admin');}
+  else{document.getElementById('pin-error').textContent='Falscher PIN. Bitte nochmal versuchen.';pinInput='';updatePinDots();}
+}
+
+// ADMIN
+function catChanged(){document.getElementById('f-newcat-row').style.display=document.getElementById('f-cat').value==='Neu...'?'block':'none';}
+function previewImg(){
+  const v=document.getElementById('f-img').value.trim(),p=document.getElementById('f-img-preview');
+  if(v){p.src=v;p.style.display='block';}else{p.style.display='none';}
+}
+function updateCatSelect(){
+  const sel=document.getElementById('f-cat'),cats=[...new Set(CARDS.map(c=>c.cat))],cur=sel.value;
+  sel.innerHTML=cats.map(c=>`<option>${c}</option>`).join('')+'<option>Neu...</option>';
+  if(cats.includes(cur))sel.value=cur;
+}
+function saveCard(){
+  const jp=document.getElementById('f-jp').value.trim(),de=document.getElementById('f-de').value.trim(),img=document.getElementById('f-img').value.trim();
+  let cat=document.getElementById('f-cat').value;
+  if(cat==='Neu...')cat=document.getElementById('f-newcat').value.trim();
+  if(!jp||!de||!cat){alert('Bitte Japanisch, Deutsch und Kategorie ausfüllen.');return;}
+  if(editIdx>=0){CARDS[editIdx]={jp,de,cat,img};cancelEdit();}
+  else{if(CARDS.find(c=>c.jp.toLowerCase()===jp.toLowerCase())){alert('Dieser Begriff existiert bereits.');return;}CARDS.push({jp,de,cat,img});}
+  saveData();
+  ['f-jp','f-de','f-img','f-newcat'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-img-preview').style.display='none';
+  document.getElementById('f-newcat-row').style.display='none';
+  renderAdmin();updateCatSelect();
+}
+function editCard(idx){
+  editIdx=idx;const c=CARDS[idx];
+  document.getElementById('f-jp').value=c.jp;document.getElementById('f-de').value=c.de;
+  document.getElementById('f-img').value=c.img||'';previewImg();
+  updateCatSelect();
+  const sel=document.getElementById('f-cat');let found=false;
+  for(let o of sel.options){if(o.value===c.cat){sel.value=c.cat;found=true;break;}}
+  if(!found){sel.value='Neu...';document.getElementById('f-newcat').value=c.cat;document.getElementById('f-newcat-row').style.display='block';}
+  document.getElementById('form-title').textContent='Begriff bearbeiten';
+  document.getElementById('save-btn').textContent='Speichern';
+  document.getElementById('cancel-btn').style.display='inline-block';
+  document.getElementById('f-jp').focus();window.scrollTo(0,0);
+}
+function cancelEdit(){
+  editIdx=-1;['f-jp','f-de','f-img','f-newcat'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-img-preview').style.display='none';
+  document.getElementById('f-newcat-row').style.display='none';
+  document.getElementById('form-title').textContent='Neuen Begriff hinzufügen';
+  document.getElementById('save-btn').textContent='Hinzufügen';
+  document.getElementById('cancel-btn').style.display='none';
+}
+function deleteCard(idx){
+  if(!confirm('"'+CARDS[idx].jp+'" wirklich löschen?'))return;
+  delete sm2[CARDS[idx].jp];CARDS.splice(idx,1);saveData();renderAdmin();
+}
+function adminSetFilter(cat){adminFilter=cat;renderAdmin();}
+function renderAdmin(){
+  updateCatSelect();
+  const cats=['Alle',...new Set(CARDS.map(c=>c.cat))];
+  document.getElementById('admin-filter').innerHTML=cats.map(c=>
+    `<span class="category-pill ${c===adminFilter?'active':''}" onclick="adminSetFilter('${c}')">${c}</span>`).join('');
+  const filtered=adminFilter==='Alle'?CARDS:CARDS.filter(c=>c.cat===adminFilter);
+  document.getElementById('admin-count').textContent=CARDS.length+' Begriffe';
+  document.getElementById('admin-list').innerHTML=filtered.map(c=>{
+    const ri=CARDS.indexOf(c);
+    return `<div class="admin-item"><div class="admin-item-row">
+      <div style="flex:1;min-width:0;"><div class="jp">${c.jp}</div><div class="de">${c.de}</div></div>
+      ${c.img?`<img src="${c.img}" style="width:44px;height:44px;object-fit:cover;border-radius:6px;flex-shrink:0;" onerror="this.style.display='none'">`:``}
+      <div class="admin-btns">
+        <button class="icon-btn" onclick="editCard(${ri})">✏️</button>
+        <button class="icon-btn" onclick="deleteCard(${ri})">🗑️</button>
+      </div></div>
+      <span class="cat-tag">${c.cat}</span>${c.img?`<span class="img-tag">📷 Bild</span>`:''}
+    </div>`;
+  }).join('');
+}
+
+// QUIZ
+let qSession=[],qIdx=0,qScore=0,qCorrect=0,qAnswered=false;
+function startQuiz(){
+  if(CARDS.length<4){alert('Mindestens 4 Begriffe nötig!');return;}
+  loadData();qSession=shuffle(CARDS).slice(0,Math.min(10,CARDS.length));
+  qIdx=0;qScore=0;qCorrect=0;streak=0;showScreen('quiz');showQuestion();
+}
+function showQuestion(){
+  if(qIdx>=qSession.length){endQuiz();return;}
+  qAnswered=false;const c=qSession[qIdx],opts=rand4(c,CARDS),letters=['A','B','C','D'];
+  const qbox=document.getElementById('q-question-box');
+  qbox.innerHTML=c.img
+    ?`<img src="${c.img}" class="quiz-img" alt="${c.jp}" onerror="this.style.display='none'"><div class="quiz-term-inner"><div class="quiz-term">${c.jp}</div><div class="quiz-cat">${c.cat}</div></div>`
+    :`<div class="quiz-term-inner"><div class="quiz-term">${c.jp}</div><div class="quiz-cat">${c.cat}</div></div>`;
+  document.getElementById('q-counter').textContent=`${qIdx+1}/${qSession.length}`;
+  document.getElementById('q-progress').style.width=((qIdx+1)/qSession.length*100)+'%';
+  document.getElementById('q-score').textContent=qScore+' Punkte';
+  updateStreak();
+  document.getElementById('q-answers').innerHTML=opts.map((opt,i)=>{
+    const safe=opt.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return `<button class="answer-btn" onclick="answerQuiz(this,'${safe}')"><span class="letter">${letters[i]}</span><span>${opt}</span></button>`;
+  }).join('');
+}
+function answerQuiz(btn,chosen){
+  if(qAnswered)return;qAnswered=true;
+  const correct=qSession[qIdx].de,isRight=chosen===correct;
+  document.querySelectorAll('.answer-btn').forEach(b=>{b.disabled=true;if(b.querySelector('span:last-child').textContent===correct)b.classList.add('correct');});
+  if(!isRight){btn.classList.remove('correct');btn.classList.add('wrong');streak=0;}
+  else{const pts=10+streak*2;qScore+=pts;totalScore+=pts;qCorrect++;streak++;showPointsPop('+'+pts);applyRating(qSession[qIdx].jp,5);}
+  updateStreak();saveData();setTimeout(()=>{qIdx++;showQuestion();},1300);
+}
+function updateStreak(){document.getElementById('q-streak').textContent=streak>=2?'🔥 '+streak+'x Serie!':'';}
+function showPointsPop(txt){const el=document.createElement('div');el.className='points-pop';el.textContent=txt;document.body.appendChild(el);setTimeout(()=>el.remove(),950);}
+function endQuiz(){
+  const pct=Math.round(qCorrect/qSession.length*100),lv=getLevel(totalScore);
+  let icon='🎉',title='Gut gemacht!';
+  if(pct===100){icon='🏆';title='Perfekt! Meister des Dojo!';}
+  else if(pct>=80){icon='⭐';title='Sehr gut!';}
+  else if(pct>=50){icon='👍';title='Weiter üben!';}
+  else{icon='💪';title='Nicht aufgeben!';}
+  document.getElementById('qd-icon').textContent=icon;
+  document.getElementById('qd-title').textContent=title;
+  document.getElementById('qd-sub').textContent=`${qCorrect} von ${qSession.length} richtig`;
+  document.getElementById('qd-stats').innerHTML=`
+    <div class="stat"><div class="num">${qScore}</div><div class="lbl">Punkte diese Runde</div></div>
+    <div class="stat"><div class="num">${totalScore}</div><div class="lbl">Gesamt</div></div>
+    <div class="stat"><div class="num">${pct}%</div><div class="lbl">Trefferquote</div></div>`;
+  document.getElementById('qd-level').innerHTML=`<span class="level-badge">${lv.icon} ${lv.label}</span>`;
+  showScreen('quizdone');
+}
+
+// KARTEIKARTEN
+let learnSession=[],learnIdx=0,learnCorrect=0,isFlipped=false;
+function startLearning(){
+  loadData();learnSession=shuffle(getDueCards()).slice(0,20);
+  if(!learnSession.length){showLearnDone();return;}
+  learnIdx=0;learnCorrect=0;showScreen('learn');showLearnCard();
+}
+function showLearnCard(){
+  if(learnIdx>=learnSession.length){showLearnDone();return;}
+  const c=learnSession[learnIdx];
+  const ff=document.getElementById('card-front-face');
+  ff.innerHTML=c.img
+    ?`<span class="clabel">Japanisch</span><img src="${c.img}" class="card-img" alt="${c.jp}" onerror="this.style.display='none'"><span class="cterm">${c.jp}</span><span class="chint">Tippe zum Aufdecken</span>`
+    :`<span class="clabel">Japanisch</span><span class="cterm">${c.jp}</span><span class="chint">Tippe zum Aufdecken</span>`;
+  document.getElementById('card-back-text').textContent=c.de;
+  document.getElementById('learn-counter').textContent=`${learnIdx+1}/${learnSession.length}`;
+  document.getElementById('learn-category').textContent=c.cat;
+  isFlipped=false;
+  document.getElementById('flashcard').classList.remove('flipped');
+  document.getElementById('rating-area').style.display='none';
+  document.getElementById('flip-hint').style.display='block';
+}
+function flipCard(){
+  if(isFlipped)return;isFlipped=true;
+  document.getElementById('flashcard').classList.add('flipped');
+  document.getElementById('rating-area').style.display='block';
+  document.getElementById('flip-hint').style.display='none';
+}
+function rate(q){
+  applyRating(learnSession[learnIdx].jp,q);
+  if(q>=3){learnCorrect++;totalScore+=5;}
+  saveData();learnIdx++;showLearnCard();
+}
+function showLearnDone(){
+  document.getElementById('done-stats').innerHTML=`
+    <div class="stat"><div class="num">${learnSession.length}</div><div class="lbl">Karten</div></div>
+    <div class="stat"><div class="num">${learnCorrect}</div><div class="lbl">Richtig</div></div>
+    <div class="stat"><div class="num">${getDueCards().length}</div><div class="lbl">Noch fällig</div></div>`;
+  showScreen('done');
+}
+
+// LISTE
+let activeFilter='Alle';
+function renderList(){
+  const cats=['Alle',...new Set(CARDS.map(c=>c.cat))];
+  document.getElementById('cat-filter').innerHTML=cats.map(c=>
+    `<span class="category-pill ${c===activeFilter?'active':''}" onclick="filterCat('${c}')">${c}</span>`).join('');
+  const filtered=activeFilter==='Alle'?CARDS:CARDS.filter(c=>c.cat===activeFilter);
+  document.getElementById('word-list').innerHTML=filtered.map(c=>{
+    const card=getCardSM(c.jp),due=isDue(c.jp),days=due?0:Math.ceil((card.due-Date.now())/86400000);
+    const thumb=c.img
+      ?`<img src="${c.img}" class="list-thumb" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="list-thumb-ph" style="display:none">🥋</div>`
+      :`<div class="list-thumb-ph">🥋</div>`;
+    return `<div class="list-item">${thumb}
+      <div style="flex:1;min-width:0;"><div class="jp">${c.jp}</div><div class="de">${c.de}</div></div>
+      <span class="${due?'due-now':'due-later'}">${due?'Fällig':days+'d'}</span>
+    </div>`;
+  }).join('');
+}
+function filterCat(cat){activeFilter=cat;renderList();}
+
+loadData();updateHome();
+</script>
+</body>
+</html>
