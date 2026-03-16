@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ZfK Aikido Trainer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        
+        :root {
+            --zfk-red: #e31e24;
+            --zfk-black: #1a1a1a;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--zfk-black);
+            color: #1a1a1a;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 260px;
+            margin: 0 auto;
+            height: 180px;
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .btn-active:active { transform: scale(0.97); }
+
+        .reveal-box {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .kyu-chip {
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        .kyu-chip.active {
+            border-color: var(--zfk-red);
+            background-color: white;
+            color: var(--zfk-red);
+        }
+    </style>
+</head>
+<body class="flex justify-center min-h-screen">
+
+    <div id="app" class="w-full max-w-md bg-stone-50 flex flex-col relative shadow-2xl overflow-hidden">
+        
+        <!-- HOME SCREEN -->
+        <div id="screen-home" class="screen active flex-1 flex flex-col p-6 overflow-y-auto">
+            <header class="text-center mb-6">
+                <div class="inline-block bg-black text-white px-8 py-3 rounded-2xl border-b-8 border-[#e31e24] mb-3">
+                    <h1 class="text-4xl font-black tracking-tighter italic">Z<span class="text-[#e31e24]">f</span>K</h1>
+                </div>
+                <p class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Aikido Kyu Training</p>
+            </header>
+
+            <div class="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 mb-6">
+                <div class="chart-container">
+                    <canvas id="mainChart"></canvas>
+                </div>
+                <div class="grid grid-cols-3 gap-2 mt-4 text-center">
+                    <div class="bg-stone-50 p-2 rounded-xl">
+                        <span class="block text-xl font-black text-[#e31e24]" id="pts-display">0</span>
+                        <span class="text-[8px] font-bold text-gray-400 uppercase">Punkte</span>
+                    </div>
+                    <div class="bg-stone-50 p-2 rounded-xl">
+                        <span class="block text-xl font-black text-black" id="due-display">0</span>
+                        <span class="text-[8px] font-bold text-gray-400 uppercase">Fällig</span>
+                    </div>
+                    <div class="bg-stone-50 p-2 rounded-xl">
+                        <span class="block text-xl font-black text-black" id="rank-display">6. Kyu</span>
+                        <span class="text-[8px] font-bold text-gray-400 uppercase">Rang</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <p class="text-[10px] font-black text-gray-400 uppercase mb-3 px-1">Dein Prüfungsziel</p>
+                <div class="flex gap-2 overflow-x-auto no-scrollbar" id="kyu-selector"></div>
+            </div>
+
+            <nav class="space-y-3">
+                <button onclick="startSession('learn')" class="btn-active w-full bg-[#e31e24] text-white p-5 rounded-2xl font-black flex items-center justify-between shadow-lg shadow-red-500/20">
+                    <span>🥋 TRAINING STARTEN</span>
+                    <span class="text-xl">→</span>
+                </button>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="startSession('quiz')" class="btn-active bg-black text-white p-4 rounded-2xl font-bold text-xs flex flex-col items-center gap-2">
+                        <span class="text-xl">🎯</span> QUIZ
+                    </button>
+                    <button onclick="startSession('duell')" class="btn-active bg-black text-white p-4 rounded-2xl font-bold text-xs flex flex-col items-center gap-2">
+                        <span class="text-xl">⏱️</span> DUELL
+                    </button>
+                </div>
+                <button onclick="showScreen('lexikon')" class="btn-active w-full bg-white border-2 border-black text-black p-4 rounded-2xl font-bold text-sm">
+                    📖 LEXIKON & SUCHE
+                </button>
+            </nav>
+
+            <footer class="mt-8 text-center">
+                <button onclick="showScreen('pin')" class="text-gray-300 text-[10px] font-black hover:text-black transition-colors uppercase tracking-widest">Sensei Bereich</button>
+            </footer>
+        </div>
+
+        <!-- LEARN SCREEN -->
+        <div id="screen-learn" class="screen hidden flex-1 flex flex-col p-6">
+            <div class="flex items-center justify-between mb-6">
+                <button onclick="endSession()" class="text-2xl font-bold text-gray-300">✕</button>
+                <div class="h-1.5 flex-1 mx-6 bg-gray-200 rounded-full overflow-hidden">
+                    <div id="l-progress-bar" class="h-full bg-[#e31e24] w-0 transition-all duration-300"></div>
+                </div>
+                <span id="l-counter" class="text-[10px] font-black">1/10</span>
+            </div>
+
+            <div class="flex-1 flex flex-col gap-4">
+                <div class="bg-white rounded-[2.5rem] p-8 shadow-xl border border-gray-100 flex flex-col items-center text-center relative overflow-hidden min-h-[400px]">
+                    <div class="absolute top-4 right-6 text-[10px] font-black text-gray-300" id="l-kyu-tag">6. KYU</div>
+                    
+                    <div class="mb-6 w-full h-44 bg-stone-50 rounded-3xl flex items-center justify-center overflow-hidden border border-gray-50">
+                        <img id="l-img" src="" class="max-h-full max-w-full object-contain p-2" onerror="handleImageError(this)">
+                    </div>
+
+                    <h2 id="l-jp" class="text-4xl font-black text-black mb-1">...</h2>
+                    <p id="l-cat" class="text-[9px] font-bold uppercase tracking-widest text-[#e31e24] opacity-60"></p>
+                    
+                    <button onclick="playTTS()" class="mt-6 p-4 bg-stone-100 rounded-full hover:bg-stone-200 transition-colors">🔊</button>
+                </div>
+
+                <div id="reveal-zone" class="h-44 flex flex-col items-center justify-center pt-2">
+                    <button id="btn-reveal" onclick="reveal()" class="w-full bg-black text-white py-5 rounded-2xl font-black shadow-xl">BEDEUTUNG ENTHÜLLEN</button>
+                    
+                    <div id="l-solution" class="hidden w-full text-center">
+                        <p id="l-de" class="text-2xl font-black text-[#e31e24] mb-6"></p>
+                        <div class="grid grid-cols-3 gap-3">
+                            <button onclick="rate(1)" class="bg-red-50 text-red-600 p-4 rounded-xl font-black text-[10px] border border-red-100 uppercase">Falsch</button>
+                            <button onclick="rate(3)" class="bg-orange-50 text-orange-600 p-4 rounded-xl font-black text-[10px] border border-orange-100 uppercase">Fast</button>
+                            <button onclick="rate(5)" class="bg-green-50 text-green-600 p-4 rounded-xl font-black text-[10px] border border-green-100 uppercase">Richtig</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- QUIZ SCREEN -->
+        <div id="screen-quiz" class="screen hidden flex-1 flex flex-col p-6">
+            <div class="flex items-center justify-between mb-4">
+                <button onclick="endSession()" class="text-2xl font-bold text-gray-300">✕</button>
+                <div id="q-timer" class="text-[#e31e24] font-black text-xl"></div>
+                <div id="q-score" class="font-black text-sm">0 PKT</div>
+            </div>
+            <div class="flex-1 flex flex-col justify-center">
+                <div class="text-center mb-10">
+                    <p id="q-cat" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Kategorie</p>
+                    <h2 id="q-term" class="text-4xl font-black leading-tight">...</h2>
+                </div>
+                <div id="q-options" class="grid gap-3"></div>
+            </div>
+        </div>
+
+        <!-- LEXIKON -->
+        <div id="screen-lexikon" class="screen hidden flex-1 flex flex-col p-6">
+            <div class="flex items-center gap-4 mb-6">
+                <button onclick="showScreen('home')" class="text-2xl">←</button>
+                <h2 class="text-2xl font-black">Lexikon</h2>
+            </div>
+            <div class="relative mb-6">
+                <input type="text" id="lex-search" placeholder="Suchen..." oninput="updateLexikon()" class="w-full p-4 pl-12 rounded-2xl border-2 border-gray-100 outline-none focus:border-[#e31e24] transition-all font-bold">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 opacity-30">🔍</span>
+            </div>
+            <div class="flex gap-2 overflow-x-auto no-scrollbar pb-4" id="lex-cats"></div>
+            <div id="lex-list" class="flex-1 space-y-3 overflow-y-auto pr-1"></div>
+        </div>
+
+        <!-- PIN SCREEN -->
+        <div id="screen-pin" class="screen hidden flex-1 flex flex-col items-center justify-center p-6">
+            <h2 class="text-2xl font-black mb-8">Sensei Bereich</h2>
+            <div class="flex gap-4 mb-12" id="pin-dots">
+                <div class="w-4 h-4 rounded-full bg-gray-200"></div>
+                <div class="w-4 h-4 rounded-full bg-gray-200"></div>
+                <div class="w-4 h-4 rounded-full bg-gray-200"></div>
+                <div class="w-4 h-4 rounded-full bg-gray-200"></div>
+            </div>
+            <div class="grid grid-cols-3 gap-4" id="pin-grid"></div>
+            <button onclick="showScreen('home')" class="mt-12 text-gray-400 font-bold text-xs uppercase tracking-widest">Abbrechen</button>
+        </div>
+
+        <!-- ADMIN -->
+        <div id="screen-admin" class="screen hidden flex-1 flex flex-col p-6">
+            <div class="flex items-center justify-between mb-8">
+                <button onclick="showScreen('home')" class="text-2xl">←</button>
+                <h2 class="text-2xl font-black">Verwaltung</h2>
+            </div>
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <button onclick="exportData()" class="bg-black text-white p-4 rounded-xl text-[10px] font-black uppercase">Backup</button>
+                <button onclick="document.getElementById('imp-file').click()" class="bg-black text-white p-4 rounded-xl text-[10px] font-black uppercase">Import</button>
+                <input type="file" id="imp-file" class="hidden" onchange="importData(event)">
+            </div>
+            <button onclick="addNew()" class="w-full bg-[#e31e24] text-white p-4 rounded-xl font-black mb-6 uppercase text-sm">Neuer Begriff</button>
+            <div id="admin-list" class="flex-1 space-y-2 overflow-y-auto"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- DATASET ---
+        const CARDS = [
+            {jp:"Aikido",de:"Weg der harmonischen Kraft",cat:"Grundlagen",img:"bilder/357252c205-aikido kanji.png",kyu:6},
+            {jp:"Aiki",de:"Vereinigung der Kräfte",cat:"Grundlagen",img:"bilder/Aiki.png",kyu:6},
+            {jp:"Dojo",de:"Übungsraum",cat:"Grundlagen",img:"",kyu:6},
+            {jp:"Sensei",de:"Lehrer",cat:"Grundlagen",img:"",kyu:6},
+            {jp:"Sempai",de:"Älterer Schüler",cat:"Grundlagen",img:"",kyu:6},
+            {jp:"Kohai",de:"Jüngerer Schüler",cat:"Grundlagen",img:"",kyu:6},
+            {jp:"Tatami",de:"Matte",cat:"Grundlagen",img:"",kyu:6},
+            {jp:"Gi / Dogi",de:"Übungsanzug",cat:"Grundlagen",img:"bilder/Uwagi transparent.png",kyu:6},
+            {jp:"Hakama",de:"Weite Übungshose",cat:"Grundlagen",img:"bilder/Hakama.png",kyu:5},
+            {jp:"Obi",de:"Gürtel",cat:"Grundlagen",img:"bilder/Obi.png",kyu:6},
+            {jp:"Kamae",de:"Haltung / Stellung",cat:"Grundlagen",img:"",kyu:6},
+            {jp:"Hanmi",de:"Schrittstellung",cat:"Grundlagen",img:"",kyu:6},
+            {jp:"Ma-ai",de:"Optimaler Kampfabstand",cat:"Grundlagen",img:"bilder/Maai 2.png",kyu:5},
+            {jp:"Zanshin",de:"Wachsame Aufmerksamkeit",cat:"Grundlagen",img:"",kyu:5},
+            {jp:"Ki",de:"Lebensenergie",cat:"Grundlagen",img:"bilder/Ki.jpg",kyu:6},
+            {jp:"Ai-Kamae",de:"Gleiche Stellung",cat:"Grundlagen",img:"bilder/Ai Kamae 2.png",kyu:5},
+            {jp:"Gyaku-Kamae",de:"Gespiegelte Stellung",cat:"Grundlagen",img:"bilder/Gyaku Kamae.png",kyu:5},
+            {jp:"Morihei Ueshiba",de:"O-Sensei (Begründer)",cat:"Grundlagen",img:"bilder/O_Sensei.jpg",kyu:6},
+            {jp:"Aiki-Otoshi",de:"Aushebewurf",cat:"Grundlagen",img:"bilder/Aiki Otoshi 3.png",kyu:3},
+            {jp:"Ude-Kime-Nage",de:"Armhebelwurf",cat:"Grundlagen",img:"bilder/Ude Kime Nage.png",kyu:4},
+            {jp:"Randori",de:"Freies Üben",cat:"Grundlagen",img:"bilder/Randori.png",kyu:2},
+            {jp:"Rei",de:"Verbeugung / Gruß",cat:"Etikette",img:"bilder/Rei im Stand.png",kyu:6},
+            {jp:"Mokuso",de:"Meditation",cat:"Etikette",img:"bilder/Seiza seitlich transparent.png",kyu:6},
+            {jp:"Seiza",de:"Kniesitz",cat:"Etikette",img:"bilder/Hinsetzen.png",kyu:6},
+            {jp:"Ude Osae Irimi",de:"Ikkyo (Direkt)",cat:"Techniken",img:"bilder/Ude Osae Irimi 2.png",kyu:6},
+            {jp:"Ude Osae Tenkan",de:"Ikkyo (Drehend)",cat:"Techniken",img:"bilder/Ude Osae Tenkan.png",kyu:5},
+            {jp:"Kote Mawashi",de:"Nikyo (Handgelenk)",cat:"Techniken",img:"bilder/Kote Mawashi.png",kyu:4},
+            {jp:"Kote Hineri",de:"Sankyo (Drehgriff)",cat:"Techniken",img:"bilder/Kote Hineri 3.png",kyu:3},
+            {jp:"Tekubi Osae",de:"Yonkyo (Druckpunkt)",cat:"Techniken",img:"bilder/Tekubi Osae Irimi.png",kyu:2},
+            {jp:"Ude Nobashi",de:"Gokyo (5. Technik)",cat:"Techniken",img:"bilder/Ude Nobashi.png",kyu:1},
+            {jp:"Irimi-Nage",de:"Eintrittswurf",cat:"Techniken",img:"bilder/Irimi Nage 4 transparent.png",kyu:6},
+            {jp:"Shiho-Nage",de:"Vier-Seiten-Wurf",cat:"Techniken",img:"bilder/Shiho Nage 3.png",kyu:5},
+            {jp:"Kote-Gaeshi",de:"Handgelenkswurf",cat:"Techniken",img:"bilder/Kote Gaeshi transparent.png",kyu:5},
+            {jp:"Tenchi-Nage",de:"Himmel-Erde-Wurf",cat:"Techniken",img:"bilder/Tenchi Nage 3.png",kyu:4},
+            {jp:"Kaiten-Nage Uchi",de:"Radwurf (Innen)",cat:"Techniken",img:"bilder/Kaiten Nage Soto 2.png",kyu:4},
+            {jp:"Kaiten-Nage Soto",de:"Radwurf (Außen)",cat:"Techniken",img:"bilder/Kaiten Nage Soto 1.png",kyu:4},
+            {jp:"Juji-Garami",de:"Armkreuzwurf",cat:"Techniken",img:"bilder/Juji Garami transparent.png",kyu:2},
+            {jp:"Koshi-Nage",de:"Hüftwurf",cat:"Techniken",img:"bilder/Koshi Nage transparent.png",kyu:3},
+            {jp:"O-Soto-Otoshi",de:"Großer Außensturz",cat:"Techniken",img:"bilder/O Soto Otoshi.png",kyu:4},
+            {jp:"Irimi-Ashi",de:"Eintretender Schritt",cat:"Bewegungen",img:"bilder/Irimi Ashi.png",kyu:6},
+            {jp:"Tenkan-Ashi",de:"Rückwärtsdrehung",cat:"Bewegungen",img:"bilder/Tenkan Ashi.png",kyu:6},
+            {jp:"Tsugi-Ashi",de:"Nachstellschritt",cat:"Bewegungen",img:"bilder/Tsugi Ashi.png",kyu:6},
+            {jp:"Tai-Sabaki",de:"Ausweichen",cat:"Bewegungen",img:"bilder/Tai Sabaki 2.png",kyu:5},
+            {jp:"Shikko",de:"Kniesitz-Gehen",cat:"Bewegungen",img:"bilder/Shikko.png",kyu:6},
+            {jp:"Mae-Mawaru-Ukemi",de:"Vorwärtsrolle",cat:"Ukemi",img:"bilder/Mae Mawaru Ukemi 2.png",kyu:6},
+            {jp:"Ushiro-Mawaru-Ukemi",de:"Rückwärtsrolle",cat:"Ukemi",img:"bilder/Ushiro Mawaru Ukemi.png",kyu:6},
+            {jp:"Mae-Ukemi",de:"Vorwärts stürzen",cat:"Ukemi",img:"bilder/mae Ukemi transparent.png",kyu:5},
+            {jp:"Katate-Tori Ai-Hanmi",de:"Einhandgriff (Gleich)",cat:"Angriffe",img:"bilder/Katate Tori Ai Hanmi.png",kyu:6},
+            {jp:"Katate-Tori Gyaku-Hanmi",de:"Einhandgriff (Gegen)",cat:"Angriffe",img:"bilder/Katate Tori Gyaku Hanmi.png",kyu:6},
+            {jp:"Katate-Ryote-Tori",de:"Zweihandgriff am Arm",cat:"Angriffe",img:"bilder/Katate Ryote Tori.png",kyu:4},
+            {jp:"Shomen-Uchi",de:"Schlag auf Kopf",cat:"Angriffe",img:"bilder/Shomen Uchi.png",kyu:6},
+            {jp:"Yokomen-Uchi",de:"Seitlicher Schlag",cat:"Angriffe",img:"bilder/Yokomen Uchi.png",kyu:5},
+            {jp:"Jo",de:"Stab",cat:"Waffen",img:"bilder/Aiki Jo.png",kyu:5},
+            {jp:"Tanto",de:"Messer",cat:"Waffen",img:"bilder/Aiki Tanto Jutsu.png",kyu:4},
+            {jp:"Mune Gatame",de:"Brustfesthalte",cat:"Bodenkampf",img:"bilder/Mune Gatame 1.png",kyu:5},
+            {jp:"Kesa-Gatame",de:"Schärpenfesthalte",cat:"Bodenkampf",img:"bilder/Kesa_gatame.png",kyu:4}
+        ];
+
+        // --- APP LOGIC ---
+        let appState = {
+            cards: [],
+            sm: {},
+            pts: 0,
+            kyu: 6,
+            pin: "0711"
+        };
+
+        let session = {
+            type: null,
+            list: [],
+            idx: 0,
+            score: 0,
+            timer: null
+        };
+
+        let pinBuffer = "";
+        let currentLexCat = "Alle";
+
+        // INIT
+        function init() {
+            const saved = localStorage.getItem('zfk_v7_data');
+            if(saved) {
+                appState = JSON.parse(saved);
+            } else {
+                appState.cards = JSON.parse(JSON.stringify(CARDS));
+            }
+            renderKyuSelectors();
+            setupPin();
+            updateStats();
+            initChart();
+            showScreen('home');
+        }
+
+        function save() {
+            localStorage.setItem('zfk_v7_data', JSON.stringify(appState));
+        }
+
+        // NAVIGATION
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+            document.getElementById('screen-' + id).classList.remove('hidden');
+            clearInterval(session.timer);
+            if(id === 'home') { updateStats(); updateChart(); }
+            if(id === 'lexikon') updateLexikon();
+            if(id === 'admin') renderAdmin();
+        }
+
+        // STATS & CHART
+        let mainChart;
+        function initChart() {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            mainChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Gelernt', 'Offen'],
+                    datasets: [{
+                        data: [0, 100],
+                        backgroundColor: ['#e31e24', '#f0f0f0'],
+                        borderWidth: 0,
+                        cutout: '80%'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    animation: { duration: 1500 }
+                }
+            });
+        }
+
+        function updateStats() {
+            const learned = appState.cards.filter(c => (appState.sm[c.jp]?.rep || 0) > 0).length;
+            const due = appState.cards.filter(c => {
+                if(c.kyu < appState.kyu) return false;
+                const s = appState.sm[c.jp];
+                return !s || s.due <= Date.now();
+            }).length;
+
+            document.getElementById('pts-display').textContent = appState.pts;
+            document.getElementById('due-display').textContent = due;
+            document.getElementById('rank-display').textContent = appState.kyu + ". Kyu";
+        }
+
+        function updateChart() {
+            const learned = appState.cards.filter(c => (appState.sm[c.jp]?.rep || 0) > 0).length;
+            const total = appState.cards.length;
+            const pct = Math.round((learned / total) * 100);
+            mainChart.data.datasets[0].data = [pct, 100 - pct];
+            mainChart.update();
+        }
+
+        function renderKyuSelectors() {
+            const kyus = [6, 5, 4, 3, 2, 1];
+            document.getElementById('kyu-selector').innerHTML = kyus.map(k => `
+                <button onclick="setKyu(${k})" class="kyu-chip px-5 py-2 rounded-full font-black text-xs whitespace-nowrap bg-stone-100 ${appState.kyu === k ? 'active' : ''}">
+                    ${k}. KYU
+                </button>
+            `).join('');
+        }
+
+        function setKyu(k) { appState.kyu = k; save(); renderKyuSelectors(); updateStats(); }
+
+        // SESSIONS
+        function startSession(mode) {
+            session.type = mode;
+            session.idx = 0;
+            session.score = 0;
+
+            // Logic: 6 is White, 1 is Brown. The higher the number, the lower the grade.
+            // When user picks "5. Kyu", they learn 6 and 5.
+            session.list = appState.cards.filter(c => c.kyu >= appState.kyu);
+            
+            if(mode === 'learn') {
+                session.list = session.list.filter(c => !appState.sm[c.jp] || appState.sm[c.jp].due <= Date.now());
+            }
+
+            session.list.sort(() => Math.random() - 0.5);
+
+            if(session.list.length < 1) return alert("Alles gelernt für diesen Grad!");
+
+            if(mode === 'learn') {
+                showScreen('learn');
+                renderLearn();
+            } else {
+                if(session.list.length < 4) return alert("Zu wenig Begriffe.");
+                showScreen('quiz');
+                if(mode === 'duell') runDuellTimer();
+                renderQuiz();
+            }
+        }
+
+        // LEARNING
+        function renderLearn() {
+            const card = session.list[session.idx];
+            document.getElementById('l-img').src = card.img || '';
+            document.getElementById('l-jp').textContent = card.jp;
+            document.getElementById('l-de').textContent = card.de;
+            document.getElementById('l-cat').textContent = card.cat;
+            document.getElementById('l-kyu-tag').textContent = card.kyu + ". KYU";
+            document.getElementById('l-counter').textContent = `${session.idx + 1}/${session.list.length}`;
+            document.getElementById('l-progress-bar').style.width = ((session.idx + 1) / session.list.length * 100) + "%";
+
+            document.getElementById('btn-reveal').classList.remove('hidden');
+            document.getElementById('l-solution').classList.add('hidden');
+        }
+
+        function reveal() {
+            document.getElementById('btn-reveal').classList.add('hidden');
+            document.getElementById('l-solution').classList.remove('hidden');
+        }
+
+        function rate(q) {
+            const card = session.list[session.idx];
+            updateSM(card.jp, q);
+            if(q >= 3) appState.pts += 5;
+            
+            session.idx++;
+            if(session.idx < session.list.length) renderLearn();
+            else { alert("Training beendet!"); showScreen('home'); }
+        }
+
+        function updateSM(id, q) {
+            let s = appState.sm[id] || { interval: 0, ef: 2.5, rep: 0, due: 0 };
+            if (q < 3) { s.rep = 0; s.interval = 1; }
+            else {
+                if (s.rep === 0) s.interval = 1;
+                else if (s.rep === 1) s.interval = 4;
+                else s.interval = Math.round(s.interval * s.ef);
+                s.rep++;
+            }
+            s.ef = Math.max(1.3, s.ef + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02)));
+            s.due = Date.now() + (s.interval * 86400000);
+            appState.sm[id] = s;
+            save();
+        }
+
+        // QUIZ
+        function renderQuiz() {
+            const correct = session.list[session.idx % session.list.length];
+            const others = appState.cards.filter(c => c.jp !== correct.jp).sort(() => Math.random() - 0.5).slice(0, 3);
+            const options = [correct, ...others].sort(() => Math.random() - 0.5);
+
+            document.getElementById('q-term').textContent = correct.jp;
+            document.getElementById('q-cat').textContent = correct.cat;
+            document.getElementById('q-score').textContent = session.score + " PKT";
+
+            document.getElementById('q-options').innerHTML = options.map(opt => `
+                <button onclick="checkQuiz('${opt.jp}', '${correct.jp}', this)" class="quiz-box bg-white w-full p-5 rounded-2xl font-black text-sm border-2 border-stone-50 transition-all">
+                    ${opt.de}
+                </button>
+            `).join('');
+        }
+
+        function checkQuiz(sel, cor, el) {
+            if(sel === cor) {
+                el.classList.add('correct', 'bg-green-500', 'text-white');
+                session.score += 10;
+                appState.pts += 2;
+            } else {
+                el.classList.add('wrong', 'bg-red-500', 'text-white');
+            }
+            setTimeout(() => {
+                session.idx++;
+                if(session.type === 'quiz' && session.idx >= 10) {
+                    alert("Fertig! Score: " + session.score);
+                    showScreen('home');
+                } else { renderQuiz(); }
+            }, 500);
+        }
+
+        function runDuellTimer() {
+            let t = 60;
+            document.getElementById('q-timer').textContent = t + "s";
+            session.timer = setInterval(() => {
+                t--;
+                document.getElementById('q-timer').textContent = t + "s";
+                if(t <= 0) {
+                    clearInterval(session.timer);
+                    alert("Zeit um! Dein Score: " + session.score);
+                    showScreen('home');
+                }
+            }, 1000);
+        }
+
+        function endSession() { showScreen('home'); }
+
+        // LEXIKON
+        function updateLexikon() {
+            const q = document.getElementById('lex-search').value.toLowerCase();
+            const cats = ['Alle', ...new Set(appState.cards.map(c => c.cat))];
+            
+            document.getElementById('lex-cats').innerHTML = cats.map(c => `
+                <button onclick="setLexFilter('${c}')" class="px-4 py-2 rounded-full font-black text-[10px] whitespace-nowrap uppercase ${currentLexCat === c ? 'bg-black text-white' : 'bg-white border border-stone-100'}">
+                    ${c}
+                </button>
+            `).join('');
+
+            const filtered = appState.cards.filter(c => {
+                const match = c.jp.toLowerCase().includes(q) || c.de.toLowerCase().includes(q);
+                const matchCat = currentLexCat === 'Alle' || c.cat === currentLexCat;
+                return match && matchCat;
+            }).sort((a,b) => a.jp.localeCompare(b.jp));
+
+            document.getElementById('lex-list').innerHTML = filtered.map(c => `
+                <div class="lex-item flex items-center gap-4">
+                    ${c.img ? `<img src="${c.img}" class="lex-img" onerror="handleImageError(this)">` : '<div class="lex-img flex items-center justify-center">🥋</div>'}
+                    <div class="lex-info">
+                        <h4>${c.jp}</h4>
+                        <p>${c.de}</p>
+                    </div>
+                    <span class="text-[8px] font-black text-gray-400 border border-gray-100 px-2 py-1 rounded-md">${c.kyu}. KYU</span>
+                </div>
+            `).join('');
+        }
+
+        function setLexFilter(c) { currentLexCat = c; updateLexikon(); }
+
+        // PIN & ADMIN
+        function setupPin() {
+            const grid = document.getElementById('pin-grid');
+            [1,2,3,4,5,6,7,8,9,'C',0,'OK'].forEach(v => {
+                const b = document.createElement('button');
+                b.className = "pin-key";
+                b.textContent = v;
+                b.onclick = () => handlePin(v);
+                grid.appendChild(b);
+            });
+        }
+
+        function handlePin(v) {
+            if(v === 'C') pinBuffer = "";
+            else if(v === 'OK') checkPin();
+            else if(pinBuffer.length < 4) pinBuffer += v;
+            
+            const dots = document.querySelectorAll('#pin-dots div');
+            dots.forEach((d, i) => d.style.backgroundColor = i < pinBuffer.length ? '#e31e24' : '#e5e7eb');
+            if(pinBuffer.length === 4 && v !== 'OK') setTimeout(checkPin, 200);
+        }
+
+        function checkPin() {
+            if(pinBuffer === appState.pin) { pinBuffer = ""; showScreen('admin'); }
+            else { alert("PIN FALSCH"); pinBuffer = ""; document.querySelectorAll('#pin-dots div').forEach(d => d.style.backgroundColor = '#e5e7eb'); }
+        }
+
+        function renderAdmin() {
+            document.getElementById('admin-list').innerHTML = appState.cards.map((c, i) => `
+                <div class="flex items-center justify-between p-4 bg-white rounded-xl border border-stone-50">
+                    <div><p class="font-black text-xs">${c.jp}</p><p class="text-[10px] text-gray-400">${c.de} (${c.kyu}. Kyu)</p></div>
+                    <div class="flex gap-4">
+                        <button onclick="edit(${i})" class="text-lg">✏️</button>
+                        <button onclick="del(${i})" class="text-lg">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function edit(i) {
+            const c = appState.cards[i];
+            const jp = prompt("Japanisch:", c.jp);
+            const de = prompt("Deutsch:", c.de);
+            const kyu = parseInt(prompt("Kyu:", c.kyu));
+            if(jp && de) { appState.cards[i] = {...c, jp, de, kyu: kyu || 6}; save(); renderAdmin(); }
+        }
+
+        function del(i) { if(confirm("Löschen?")) { appState.cards.splice(i, 1); save(); renderAdmin(); } }
+
+        function addNew() {
+            const jp = prompt("Japanisch:");
+            const de = prompt("Deutsch:");
+            const kyu = parseInt(prompt("Kyu:", "6"));
+            if(jp && de) { appState.cards.push({jp, de, cat:"Grundlagen", img:"", kyu: kyu || 6}); save(); renderAdmin(); }
+        }
+
+        // TOOLS
+        function playTTS() {
+            const u = new SpeechSynthesisUtterance(document.getElementById('l-jp').textContent);
+            u.lang = 'ja-JP'; u.rate = 0.8; window.speechSynthesis.speak(u);
+        }
+
+        function handleImageError(img) {
+            img.style.display = "none";
+            const parent = img.parentElement;
+            if(!parent.querySelector('.fallback')) {
+                const d = document.createElement('div');
+                d.className = "fallback text-4xl";
+                d.textContent = "🥋";
+                parent.appendChild(d);
+            }
+        }
+
+        function exportData() {
+            const blob = new Blob([JSON.stringify(appState)], {type:'application/json'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `zfk_aikido_backup.json`;
+            a.click();
+        }
+
+        function importData(e) {
+            const r = new FileReader();
+            r.onload = (ev) => {
+                try {
+                    const d = JSON.parse(ev.target.result);
+                    if(d.cards) { appState = d; save(); location.reload(); }
+                } catch(err) { alert("Fehler."); }
+            };
+            r.readAsText(e.target.files[0]);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
