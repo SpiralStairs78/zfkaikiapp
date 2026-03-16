@@ -8,10 +8,27 @@
     <meta name="apple-mobile-web-app-title" content="ZfK Aikido">
     <meta name="theme-color" content="#1a1a1a">
     <title>ZfK Aikido Trainer</title>
+    
+    <!-- CSS & Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Fix: Globaler Image Error Handler im Head -->
+    <script>
+        window.handleImageError = function(img) {
+            img.style.display = 'none';
+            const parent = img.parentElement;
+            if (parent && !parent.querySelector('.fallback-icon')) {
+                const ph = document.createElement('div');
+                ph.className = "fallback-icon text-4xl flex items-center justify-center h-full w-full bg-stone-50 text-gray-300";
+                ph.textContent = "🥋";
+                parent.appendChild(ph);
+            }
+        };
+    </script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
         
         :root {
             --zfk-red: #e31e24;
@@ -20,7 +37,7 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #1a1a1a;
+            background-color: var(--zfk-black);
             color: #1a1a1a;
             -webkit-tap-highlight-color: transparent;
         }
@@ -28,11 +45,9 @@
         .chart-container {
             position: relative;
             width: 100%;
-            max-width: 300px;
-            margin-left: auto;
-            margin-right: auto;
-            height: 200px;
-            max-height: 200px;
+            max-width: 280px;
+            margin: 0 auto;
+            height: 180px;
         }
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -42,13 +57,15 @@
         .btn-shadow:active { transform: translateY(2px); box-shadow: 0 2px 0px rgba(0,0,0,0.1); }
 
         .reveal-content {
-            transition: all 0.3s ease-in-out;
+            transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
             opacity: 0;
-            transform: translateY(10px);
+            transform: translateY(5px);
+            pointer-events: none;
         }
         .reveal-content.show {
             opacity: 1;
             transform: translateY(0);
+            pointer-events: auto;
         }
 
         .pin-dot.active {
@@ -61,107 +78,117 @@
 
     <div id="app" class="w-full max-w-md bg-stone-50 flex flex-col relative overflow-hidden shadow-2xl">
         
-        <!-- STARTSEITE -->
+        <!-- DASHBOARD -->
         <div id="screen-home" class="screen active flex-1 flex flex-col p-6 overflow-y-auto">
             <header class="text-center mb-8">
-                <div class="inline-block bg-black text-white px-6 py-2 rounded-full border-b-4 border-[#e31e24] mb-4">
-                    <h1 class="text-3xl font-black tracking-tighter">Z<span class="text-[#e31e24]">f</span>K</h1>
+                <div class="inline-block bg-black text-white px-8 py-3 rounded-2xl border-b-4 border-[#e31e24] mb-4">
+                    <h1 class="text-4xl font-black tracking-tighter italic">Z<span class="text-[#e31e24]">f</span>K</h1>
                 </div>
-                <p class="text-xs font-bold uppercase tracking-widest text-gray-500">Aikido Lern-Plattform</p>
+                <p class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Aikido Lern-Plattform</p>
             </header>
 
-            <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-6">
-                <h2 class="text-center font-extrabold text-sm text-gray-400 uppercase mb-4">Gesamtfortschritt</h2>
+            <div class="bg-white rounded-[2.5rem] p-6 shadow-sm border border-gray-100 mb-6">
+                <h2 class="text-center font-black text-[10px] text-gray-400 uppercase tracking-widest mb-4">Dein Fortschritt</h2>
                 <div class="chart-container">
                     <canvas id="progressChart"></canvas>
                 </div>
-                <div class="grid grid-cols-3 gap-4 mt-6 text-center">
-                    <div>
+                <div class="grid grid-cols-3 gap-2 mt-6">
+                    <div class="text-center bg-stone-50 p-3 rounded-2xl">
                         <span class="block text-2xl font-black text-[#e31e24]" id="stat-pts">0</span>
-                        <span class="text-[10px] font-bold text-gray-400 uppercase">Punkte</span>
+                        <span class="text-[8px] font-bold text-gray-400 uppercase">Punkte</span>
                     </div>
-                    <div>
+                    <div class="text-center bg-stone-50 p-3 rounded-2xl">
                         <span class="block text-2xl font-black text-black" id="stat-due">0</span>
-                        <span class="text-[10px] font-bold text-gray-400 uppercase">Fällig</span>
+                        <span class="text-[8px] font-bold text-gray-400 uppercase">Fällig</span>
                     </div>
-                    <div>
+                    <div class="text-center bg-stone-50 p-3 rounded-2xl">
                         <span class="block text-2xl font-black text-black" id="stat-rank">6. Kyu</span>
-                        <span class="text-[10px] font-bold text-gray-400 uppercase">Rang</span>
+                        <span class="text-[8px] font-bold text-gray-400 uppercase">Rang</span>
                     </div>
                 </div>
             </div>
 
+            <div class="mb-6">
+                <p class="text-[10px] font-black text-gray-400 uppercase mb-3 px-1">Dein Prüfungsziel</p>
+                <div class="flex gap-2 overflow-x-auto no-scrollbar" id="kyu-selector"></div>
+            </div>
+
             <nav class="space-y-3">
-                <button onclick="startMode('learn')" class="btn-primary w-full bg-[#e31e24] text-white p-5 rounded-2xl font-extrabold flex items-center justify-between group btn-shadow">
+                <button onclick="startMode('learn')" class="w-full bg-[#e31e24] text-white p-5 rounded-2xl font-black flex items-center justify-between group btn-shadow">
                     <span>🥋 TRAINING STARTEN</span>
-                    <span class="bg-white/20 p-2 rounded-lg group-hover:translate-x-1 transition-transform">→</span>
+                    <span class="bg-white/20 p-2 rounded-lg transition-transform group-hover:translate-x-1">→</span>
                 </button>
                 <div class="grid grid-cols-2 gap-3">
-                    <button onclick="startMode('quiz')" class="bg-black text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 btn-shadow">
+                    <button onclick="startMode('quiz')" class="bg-black text-white p-4 rounded-2xl font-bold text-xs flex flex-col items-center gap-2 btn-shadow">
                         <span class="text-xl">🎯</span> QUIZ
                     </button>
-                    <button onclick="startMode('duell')" class="bg-black text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 btn-shadow">
+                    <button onclick="startMode('duell')" class="bg-black text-white p-4 rounded-2xl font-bold text-xs flex flex-col items-center gap-2 btn-shadow">
                         <span class="text-xl">⏱️</span> DUELL
                     </button>
                 </div>
-                <button onclick="showScreen('lexikon')" class="w-full bg-white border-2 border-black text-black p-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 btn-shadow">
-                    <span>📖 LEXIKON A-Z</span>
+                <button onclick="showScreen('lexikon')" class="w-full bg-white border-2 border-black text-black p-4 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 btn-shadow uppercase tracking-wider">
+                    <span>📖 Lexikon & Suche</span>
                 </button>
             </nav>
 
             <footer class="mt-auto pt-8 text-center">
-                <button onclick="showScreen('pin-entry')" class="text-gray-400 text-xs font-bold hover:text-black">SENSEI LOGIN</button>
+                <button onclick="showScreen('pin-entry')" class="text-gray-300 text-[10px] font-black hover:text-black transition-colors uppercase tracking-widest">Sensei Bereich</button>
             </footer>
         </div>
 
         <!-- LERNEN -->
         <div id="screen-learn" class="screen hidden flex-1 flex flex-col p-6">
             <div class="flex items-center justify-between mb-6">
-                <button onclick="exitSession()" class="text-2xl font-bold">✕</button>
-                <div class="h-2 flex-1 mx-6 bg-gray-200 rounded-full overflow-hidden">
+                <button onclick="exitSession()" class="text-2xl font-bold text-gray-300">✕</button>
+                <div class="h-1.5 flex-1 mx-6 bg-gray-200 rounded-full overflow-hidden">
                     <div id="session-progress" class="h-full bg-[#e31e24] w-0 transition-all duration-300"></div>
                 </div>
-                <span id="session-counter" class="text-xs font-black">1/10</span>
+                <span id="session-counter" class="text-[10px] font-black">1/10</span>
             </div>
 
-            <div class="flex-1 flex flex-col justify-center gap-6">
-                <div class="bg-white rounded-3xl p-8 shadow-xl border-2 border-gray-50 flex flex-col items-center text-center">
-                    <div id="learn-image-container" class="mb-6 w-full h-48 bg-stone-50 rounded-2xl flex items-center justify-center overflow-hidden">
-                        <img id="learn-img" src="" class="max-h-full max-w-full object-contain" onerror="this.style.display='none'">
-                    </div>
-                    <h2 id="learn-jp" class="text-4xl font-black mb-2 text-black">Aikido</h2>
-                    <p id="learn-cat" class="text-[10px] font-black uppercase tracking-widest text-[#e31e24] bg-red-50 px-3 py-1 rounded-full"></p>
+            <div class="flex-1 flex flex-col justify-center gap-4">
+                <div class="bg-white rounded-[2.5rem] p-8 shadow-xl border border-gray-100 flex flex-col items-center text-center relative overflow-hidden min-h-[400px]">
+                    <div id="learn-kyu-tag" class="absolute top-6 right-8 text-[10px] font-black text-white bg-black px-2 py-1 rounded-md">6. KYU</div>
                     
-                    <button onclick="playVoice()" class="mt-4 p-3 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">🔊</button>
+                    <div id="learn-image-container" class="mb-6 w-full h-44 bg-stone-50 rounded-3xl flex items-center justify-center overflow-hidden border border-gray-50">
+                        <img id="learn-img" src="" class="max-h-full max-w-full object-contain p-2" onerror="handleImageError(this)">
+                    </div>
+
+                    <h2 id="learn-jp" class="text-4xl font-black mb-1 text-black">...</h2>
+                    <p id="learn-cat" class="text-[9px] font-bold uppercase tracking-[0.2em] text-[#e31e24] opacity-50"></p>
+                    
+                    <button onclick="playVoice()" class="mt-6 p-4 bg-stone-100 rounded-full hover:bg-stone-200 transition-colors">🔊</button>
                 </div>
 
-                <div id="reveal-area" class="h-40 flex flex-col items-center justify-center">
+                <div id="reveal-area" class="h-44 flex flex-col items-center justify-center">
                     <button id="btn-reveal" onclick="revealSolution()" class="w-full bg-black text-white p-5 rounded-2xl font-black btn-shadow">LÖSUNG ANZEIGEN</button>
                     
-                    <div id="rating-controls" class="hidden w-full reveal-content">
-                        <p id="learn-de" class="text-2xl font-bold text-[#e31e24] mb-6 text-center">Weg der Harmonie</p>
-                        <div class="grid grid-cols-3 gap-3">
-                            <button onclick="handleRate(1)" class="bg-red-100 text-red-700 p-4 rounded-xl font-bold text-xs">NEIN</button>
-                            <button onclick="handleRate(3)" class="bg-amber-100 text-amber-700 p-4 rounded-xl font-bold text-xs">TEILS</button>
-                            <button onclick="handleRate(5)" class="bg-green-100 text-green-700 p-4 rounded-xl font-bold text-xs">JA</button>
+                    <div id="rating-controls" class="hidden w-full reveal-content flex flex-col items-center">
+                        <p id="learn-de" class="text-2xl font-black text-[#e31e24] mb-6 text-center italic"></p>
+                        <div class="grid grid-cols-3 gap-3 w-full">
+                            <button onclick="handleRate(1)" class="bg-red-50 text-red-600 p-4 rounded-xl font-black text-[10px] uppercase border border-red-100">Falsch</button>
+                            <button onclick="handleRate(3)" class="bg-amber-50 text-amber-600 p-4 rounded-xl font-black text-[10px] uppercase border border-amber-100">Teils</button>
+                            <button onclick="handleRate(5)" class="bg-green-50 text-green-600 p-4 rounded-xl font-black text-[10px] uppercase border border-green-100">Gewusst</button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- QUIZ / DUELL -->
+        <!-- QUIZ SCREEN -->
         <div id="screen-quiz" class="screen hidden flex-1 flex flex-col p-6">
             <div class="flex items-center justify-between mb-4">
-                <button onclick="exitSession()" class="text-2xl font-bold">✕</button>
+                <button onclick="exitSession()" class="text-2xl font-bold text-gray-300">✕</button>
                 <div id="quiz-timer" class="text-[#e31e24] font-black text-xl">60s</div>
-                <div id="quiz-score" class="font-black">0 Pkt</div>
+                <div id="quiz-score" class="font-black text-sm">0 PKT</div>
             </div>
-            <div class="text-center py-8">
-                <h3 id="quiz-q" class="text-4xl font-black mb-2">...</h3>
-                <p id="quiz-cat-label" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Kategorie</p>
+            <div class="flex-1 flex flex-col justify-center">
+                <div class="text-center mb-10">
+                    <p id="quiz-cat-label" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Kategorie</p>
+                    <h3 id="quiz-q" class="text-4xl font-black leading-tight">...</h3>
+                </div>
+                <div id="quiz-options" class="grid gap-3"></div>
             </div>
-            <div id="quiz-options" class="grid gap-3"></div>
         </div>
 
         <!-- LEXIKON -->
@@ -171,27 +198,24 @@
                 <h2 class="text-2xl font-black">Lexikon</h2>
             </div>
             <div class="relative mb-6">
-                <input type="text" id="lex-search" placeholder="Begriff suchen..." oninput="updateLexikon()" class="w-full p-4 pl-12 rounded-2xl border-2 border-gray-100 outline-none focus:border-[#e31e24] transition-all">
-                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xl">🔍</span>
+                <input type="text" id="lex-search" placeholder="Begriff suchen..." oninput="updateLexikon()" class="w-full p-4 pl-12 rounded-2xl border-2 border-gray-100 outline-none focus:border-[#e31e24] transition-all font-bold">
+                <span class="absolute left-4 top-1/2 opacity-30 -translate-y-1/2">🔍</span>
             </div>
             <div class="flex gap-2 overflow-x-auto no-scrollbar pb-4" id="lex-cats"></div>
-            <div id="lex-list" class="flex-1 space-y-3 overflow-y-auto"></div>
+            <div id="lex-list" class="flex-1 space-y-3 overflow-y-auto pr-1"></div>
         </div>
 
         <!-- PIN ENTRY -->
         <div id="screen-pin-entry" class="screen hidden flex-1 flex flex-col items-center justify-center p-6">
-            <h2 class="text-2xl font-black mb-2">Sensei Zugang</h2>
-            <p class="text-gray-400 text-sm mb-8">Bitte PIN eingeben</p>
+            <h2 class="text-2xl font-black mb-8">Sensei Zugang</h2>
             <div class="flex gap-4 mb-12" id="pin-dots">
                 <div class="pin-dot w-4 h-4 rounded-full bg-gray-200"></div>
                 <div class="pin-dot w-4 h-4 rounded-full bg-gray-200"></div>
                 <div class="pin-dot w-4 h-4 rounded-full bg-gray-200"></div>
                 <div class="pin-dot w-4 h-4 rounded-full bg-gray-200"></div>
             </div>
-            <div class="grid grid-cols-3 gap-4" id="pin-grid">
-                <!-- PIN Buttons werden per JS generiert -->
-            </div>
-            <button onclick="showScreen('home')" class="mt-12 text-gray-400 font-bold uppercase text-xs">Abbrechen</button>
+            <div class="grid grid-cols-3 gap-4" id="pin-grid"></div>
+            <button onclick="showScreen('home')" class="mt-12 text-gray-300 font-bold uppercase text-[10px] tracking-widest">Abbrechen</button>
         </div>
 
         <!-- ADMIN -->
@@ -200,128 +224,101 @@
                 <button onclick="showScreen('home')" class="text-2xl">←</button>
                 <h2 class="text-2xl font-black">Sensei Tools</h2>
             </div>
-            <div class="grid grid-cols-2 gap-3 mb-8">
-                <button onclick="exportData()" class="bg-black text-white p-4 rounded-2xl text-xs font-bold">BACKUP EXPORT</button>
-                <button onclick="document.getElementById('import-file').click()" class="bg-black text-white p-4 rounded-2xl text-xs font-bold">IMPORT</button>
-                <input type="file" id="import-file" class="hidden" onchange="importData(event)">
+            
+            <div id="admin-form" class="hidden bg-white p-6 rounded-3xl border border-gray-100 shadow-xl mb-8 space-y-4">
+                <h3 id="form-title" class="font-black uppercase text-xs text-[#e31e24]">Begriff bearbeiten</h3>
+                <input type="hidden" id="edit-index">
+                <input type="text" id="inp-jp" placeholder="Japanisch" class="w-full p-3 rounded-xl bg-stone-50 border-none font-bold text-sm">
+                <input type="text" id="inp-de" placeholder="Deutsch" class="w-full p-3 rounded-xl bg-stone-50 border-none font-bold text-sm">
+                <div class="flex gap-2">
+                    <input type="number" id="inp-kyu" placeholder="Kyu (6-1)" class="w-1/3 p-3 rounded-xl bg-stone-50 border-none font-bold text-sm">
+                    <select id="inp-cat" class="w-2/3 p-3 rounded-xl bg-stone-50 border-none font-bold text-sm">
+                        <option>Grundlagen</option>
+                        <option>Etikette</option>
+                        <option>Rollen</option>
+                        <option>Techniken</option>
+                        <option>Bewegungen</option>
+                        <option>Ukemi</option>
+                        <option>Angriffe</option>
+                        <option>Waffen</option>
+                        <option>Bodenkampf</option>
+                    </select>
+                </div>
+                <input type="text" id="inp-img" placeholder="Bildpfad (z.B. bilder/Aiki.png)" class="w-full p-3 rounded-xl bg-stone-50 border-none font-bold text-sm">
+                <div class="flex gap-2 pt-2">
+                    <button onclick="saveAdminForm()" class="flex-1 bg-black text-white p-3 rounded-xl font-black text-xs">SPEICHERN</button>
+                    <button onclick="closeAdminForm()" class="flex-1 bg-gray-100 text-gray-400 p-3 rounded-xl font-black text-xs">ABBRECHEN</button>
+                </div>
             </div>
-            <button onclick="addNewTerm()" class="w-full bg-[#e31e24] text-white p-4 rounded-2xl font-black mb-8">NEUER BEGRIFF</button>
-            <div id="admin-list" class="flex-1 space-y-2 overflow-y-auto"></div>
+
+            <div id="admin-controls" class="space-y-3">
+                <button onclick="openAdminForm(-1)" class="w-full bg-[#e31e24] text-white p-4 rounded-2xl font-black text-sm mb-4">+ NEUER BEGRIFF</button>
+                <div class="grid grid-cols-2 gap-3 mb-6">
+                    <button onclick="exportData()" class="bg-black text-white p-4 rounded-xl text-[10px] font-black uppercase">Backup Export</button>
+                    <button onclick="document.getElementById('import-file').click()" class="bg-black text-white p-4 rounded-xl text-[10px] font-black uppercase">Import</button>
+                    <input type="file" id="import-file" class="hidden" onchange="importData(event)">
+                </div>
+            </div>
+
+            <div id="admin-list" class="flex-1 space-y-3 overflow-y-auto"></div>
         </div>
 
     </div>
 
     <script>
-        // --- DATA ---
+        // --- VOLLSTÄNDIGER DATENSATZ ---
         const CARDS = [
-            {jp:"Aikido",de:"Weg der harmonischen Kraft",cat:"Grundlagen",img:"bilder/357252c205-aikido kanji.png"},
-            {jp:"Aiki",de:"Vereinigung der Kräfte",cat:"Grundlagen",img:"bilder/Aiki.png"},
-            {jp:"Dojo",de:"Übungsraum",cat:"Grundlagen",img:""},
-            {jp:"Sensei",de:"Lehrer",cat:"Grundlagen",img:""},
-            {jp:"Sempai",de:"Älterer Schüler",cat:"Grundlagen",img:""},
-            {jp:"Kohai",de:"Jüngerer Schüler",cat:"Grundlagen",img:""},
-            {jp:"Tatami",de:"Matte",cat:"Grundlagen",img:""},
-            {jp:"Gi / Dogi",de:"Übungsanzug",cat:"Grundlagen",img:"bilder/Uwagi transparent.png"},
-            {jp:"Hakama",de:"Weite Übungshose",cat:"Grundlagen",img:"bilder/Hakama.png"},
-            {jp:"Obi",de:"Gürtel",cat:"Grundlagen",img:"bilder/Obi.png"},
-            {jp:"Kamae",de:"Haltung / Stellung",cat:"Grundlagen",img:""},
-            {jp:"Hanmi",de:"Schrittstellung",cat:"Grundlagen",img:""},
-            {jp:"Ma-ai",de:"Optimaler Kampfabstand",cat:"Grundlagen",img:"bilder/Maai 2.png"},
-            {jp:"Zanshin",de:"Wachsame Aufmerksamkeit nach Technik",cat:"Grundlagen",img:""},
-            {jp:"Ki",de:"Lebensenergie / innere Kraft",cat:"Grundlagen",img:"bilder/Ki.jpg"},
-            {jp:"Ai-Kamae",de:"Harmonische Stellung, beide gleiche Seite vorn",cat:"Grundlagen",img:"bilder/Ai Kamae 2.png"},
-            {jp:"Gyaku-Kamae",de:"gespiegelte Stellung",cat:"Grundlagen",img:"bilder/Gyaku Kamae.png"},
-            {jp:"O-Sensei Morihei Ueshiba",de:"Begründer des Aikido",cat:"Grundlagen",img:"bilder/O_Sensei.jpg"},
-            {jp:"Aiki-Otoshi",de:"Aushebewurf",cat:"Grundlagen",img:"bilder/Aiki Otoshi 3.png"},
-            {jp:"Ude-Kime-Nage",de:"Armhebelwurf",cat:"Grundlagen",img:"bilder/Ude Kime Nage.png"},
-            {jp:"Randori",de:"Freier Angriff und Verteidigung",cat:"Grundlagen",img:"bilder/Randori.png"},
-            {jp:"Ichi",de:"1 (Itsch)",cat:"Grundlagen",img:""},
-            {jp:"Ni",de:"2",cat:"Grundlagen",img:""},
-            {jp:"San",de:"3",cat:"Grundlagen",img:""},
-            {jp:"Shi",de:"4 (Schi / Yon)",cat:"Grundlagen",img:""},
-            {jp:"Go",de:"5",cat:"Grundlagen",img:""},
-            {jp:"Rokku",de:"6 (Rock)",cat:"Grundlagen",img:""},
-            {jp:"Shichi",de:"7 (Schitsch / Nana)",cat:"Grundlagen",img:""},
-            {jp:"Hachi",de:"8 (Hatsch)",cat:"Grundlagen",img:""},
-            {jp:"Kyu",de:"9",cat:"Grundlagen",img:""},
-            {jp:"Ju",de:"10 (Dschu)",cat:"Grundlagen",img:""},
-            {jp:"Rei",de:"Verbeugung / Gruß",cat:"Etikette",img:"bilder/Rei im Stand.png"},
-            {jp:"Mokuso",de:"Stille Meditation",cat:"Etikette",img:"bilder/Seiza seitlich transparent.png"},
-            {jp:"Seiza",de:"Kniesitz",cat:"Etikette",img:"bilder/Hinsetzen.png"},
-            {jp:"Uke",de:"Empfänger der Technik",cat:"Rollen",img:""},
-            {jp:"Nage / Tori",de:"Ausführender der Technik",cat:"Rollen",img:""},
-            {jp:"Shite",de:"Ausführende Person",cat:"Rollen",img:""},
-            {jp:"Ude Osae Irimi",de:"Ikkyo (Armhebel), direkter Eingang",cat:"Techniken",img:"bilder/Ude Osae Irimi 2.png"},
-            {jp:"Ude Osae Tenkan",de:"Ikkyo (Armhebel), drehender Eingang",cat:"Techniken",img:"bilder/Ude Osae Tenkan.png"},
-            {jp:"Kote Mawashi",de:"Nikyo (Handgelenk)",cat:"Techniken",img:"bilder/Kote Mawashi.png"},
-            {jp:"Kote Hineri",de:"Sankyo (Drehgriff)",cat:"Techniken",img:"bilder/Kote Hineri 3.png"},
-            {jp:"Tekubi Osae",de:"Yonkyo (Druckpunkt)",cat:"Techniken",img:"bilder/Tekubi Osae Irimi.png"},
-            {jp:"Ude Nobashi",de:"Gokyo (5. Technik)",cat:"Techniken",img:"bilder/Ude Nobashi.png"},
-            {jp:"Irimi-Nage",de:"Eintrittswurf",cat:"Techniken",img:"bilder/Irimi Nage 4 transparent.png"},
-            {jp:"Shiho-Nage",de:"Vier-Seiten-Wurf",cat:"Techniken",img:"bilder/Shiho Nage 3.png"},
-            {jp:"Kote-Gaeshi",de:"Handgelenksauswärtsdrehung",cat:"Techniken",img:"bilder/Kote Gaeshi transparent.png"},
-            {jp:"Tenchi-Nage",de:"Himmel-Erde-Wurf",cat:"Techniken",img:"bilder/Tenchi Nage 3.png"},
-            {jp:"Kaiten-Nage Uchi",de:"Radwurf, innerer Eingang",cat:"Techniken",img:"bilder/Kaiten Nage Soto 2.png"},
-            {jp:"Kaiten-Nage Soto",de:"Radwurf, äußerer Eingang",cat:"Techniken",img:"bilder/Kaiten Nage Soto 1.png"},
-            {jp:"Kokyu-Nage",de:"Atemkraftwurf",cat:"Techniken",img:""},
-            {jp:"Juji-Garami",de:"Armkreuzwurf",cat:"Techniken",img:"bilder/Juji Garami transparent.png"},
-            {jp:"Koshi-Nage",de:"Hüftwurf",cat:"Techniken",img:"bilder/Koshi Nage transparent.png"},
-            {jp:"Koshi-Nage Kote-Hineri",de:"Hüftwurf mit Unterstützung",cat:"Techniken",img:"bilder/Koshi Nage Kote Hineri.png"},
-            {jp:"O-Soto-Otoshi",de:"Großer Außensturz",cat:"Techniken",img:"bilder/O Soto Otoshi.png"},
-            {jp:"Uki-Goshi",de:"Eingedrehter Hüftwurf",cat:"Techniken",img:"bilder/Uki Goshi.png"},
-            {jp:"Morote-Gari",de:"Doppelhand-Sichel",cat:"Techniken",img:"bilder/Morote Gari.png"},
-            {jp:"Sumi-Otoshi",de:"Eckenkippe",cat:"Techniken",img:"bilder/Sumi Otoshi.png"},
-            {jp:"Kokyu-Ho aus Zaho",de:"Aufnahme von Kraft im Sitzen",cat:"Techniken",img:"bilder/Kokyu Ho aus Zaho.png"},
-            {jp:"Irimi",de:"Eintretendes Prinzip",cat:"Bewegungen",img:""},
-            {jp:"Tenkan",de:"Drehbewegung, Raum gebend",cat:"Bewegungen",img:""},
-            {jp:"Omote",de:"Davor",cat:"Bewegungen",img:""},
-            {jp:"Ura",de:"Dahinter",cat:"Bewegungen",img:""},
-            {jp:"Mae",de:"Vorwärts",cat:"Bewegungen",img:""},
-            {jp:"Ushiro",de:"Rückwärts / von hinten",cat:"Bewegungen",img:""},
-            {jp:"Hidari",de:"Links",cat:"Bewegungen",img:""},
-            {jp:"Migi",de:"Rechts",cat:"Bewegungen",img:""},
-            {jp:"Irimi-Ashi",de:"Eintretender Schritt mit Drehung",cat:"Bewegungen",img:"bilder/Irimi Ashi.png"},
-            {jp:"Tenkan-Ashi",de:"Rückwärtsdrehung mit Schritt",cat:"Bewegungen",img:"bilder/Tenkan Ashi.png"},
-            {jp:"Tsugi-Ashi",de:"Nachstellschritt",cat:"Bewegungen",img:"bilder/Tsugi Ashi.png"},
-            {jp:"Tai-Sabaki",de:"Ausweichen mit zwei Schritten",cat:"Bewegungen",img:"bilder/Tai Sabaki 2.png"},
-            {jp:"Hidari-Kamae",de:"Linke Stellung",cat:"Bewegungen",img:"bilder/Hidari Kamae.png"},
-            {jp:"Migi-Kamae",de:"Rechte Stellung",cat:"Bewegungen",img:"bilder/Migi Kamae.png"},
-            {jp:"Shikko",de:"Gehen auf den Knien",cat:"Bewegungen",img:"bilder/Shikko.png"},
-            {jp:"Shizentai",de:"Neutrale Stellung",cat:"Bewegungen",img:"bilder/Shizentai.png"},
-            {jp:"Ayumi-Ashi",de:"Sich überholender Schritt",cat:"Bewegungen",img:"bilder/Ayumi Ashi.png"},
-            {jp:"Atemi",de:"Kontrollschläge",cat:"Bewegungen",img:"bilder/Atemi.png"},
-            {jp:"Ukemi",de:"Falltechniken",cat:"Ukemi",img:""},
-            {jp:"Mae-Mawaru-Ukemi",de:"Vorwärtsrolle",cat:"Ukemi",img:"bilder/Mae Mawaru Ukemi 2.png"},
-            {jp:"Ushiro-Mawaru-Ukemi",de:"Rückwärtsrolle",cat:"Ukemi",img:"bilder/Ushiro Mawaru Ukemi.png"},
-            {jp:"Yoko-Ukemi",de:"Seitwärts stürzen",cat:"Ukemi",img:"bilder/yoko-ukemi-3.jpg"},
-            {jp:"Ushiro-Ukemi",de:"Rückwärts stürzen",cat:"Ukemi",img:"bilder/Ushiro Ukemi.png"},
-            {jp:"Mae-Ukemi",de:"Vorwärts stürzen",cat:"Ukemi",img:"bilder/mae Ukemi transparent.png"},
-            {jp:"Hanmi-Hantachi",de:"Angriff auf Sitzenden durch Stehenden",cat:"Ukemi",img:"bilder/Hanmi Hantachi.png"},
-            {jp:"Suwari-Waza",de:"Techniken im Sitzen",cat:"Ukemi",img:"bilder/Suwari Waza 2.png"},
-            {jp:"Katate-Tori Ai-Hanmi",de:"Einhandgriff, gleiche Stellung",cat:"Angriffe",img:"bilder/Katate Tori Ai Hanmi.png"},
-            {jp:"Katate-Tori Gyaku-Hanmi",de:"Einhandgriff, gespiegelte Stellung",cat:"Angriffe",img:"bilder/Katate Tori Gyaku Hanmi.png"},
-            {jp:"Katate-Ryote-Tori",de:"Zweihandgriff am Arm",cat:"Angriffe",img:"bilder/Katate Ryote Tori.png"},
-            {jp:"Ryote-Tori",de:"Beidhandgriff",cat:"Angriffe",img:"bilder/Ryote Tori.png"},
-            {jp:"Shomen-Tsuki",de:"Fauststoß",cat:"Angriffe",img:"bilder/Shomen Tsuki.png"},
-            {jp:"Shomen-Uchi",de:"Schlag auf den Kopf",cat:"Angriffe",img:"bilder/Shomen Uchi.png"},
-            {jp:"Yokomen-Uchi",de:"Seitlicher Kopfschlag",cat:"Angriffe",img:"bilder/Yokomen Uchi.png"},
-            {jp:"Ushiro-Kakae-Tori",de:"Umklammern von hinten",cat:"Angriffe",img:"bilder/Ushiro Kakae Tori.png"},
-            {jp:"Ushiro-Katate-Tori-Kubi-Shime.",de:"Fassen + Würgen von hinten",cat:"Angriffe",img:"bilder/Ushiro Katate Tori Kubi Shime.png"},
-            {jp:"Ushiro-Ryokata-Tori",de:"Schultern fassen von hinten",cat:"Angriffe",img:"bilder/Ushiro Ryokata Tori.png"},
-            {jp:"Ushiro-Ryote-Tori",de:"Hände fassen von hinten",cat:"Angriffe",img:"bilder/ushiro-ryote-dori.jpg"},
-            {jp:"Ushiro-Eri-Tori",de:"Kragen fassen von hinten",cat:"Angriffe",img:"bilder/ushiro-eri-dori.jpg"},
-            {jp:"Mae-Geri",de:"Gerader Tritt",cat:"Angriffe",img:"bilder/mae-geri.jpg"},
-            {jp:"Ken / Katana",de:"Schwert",cat:"Waffen",img:""},
-            {jp:"Jo",de:"Stab",cat:"Waffen",img:"bilder/Aiki Jo.png"},
-            {jp:"Bokken / Bokuto",de:"Holzschwert",cat:"Waffen",img:""},
-            {jp:"Tanto",de:"Holzmesser",cat:"Waffen",img:"bilder/Aiki Tanto Jutsu.png"},
-            {jp:"Mune Gatame",de:"Brustfesthalte",cat:"Bodenkampf",img:"bilder/Mune Gatame 1.png"},
-            {jp:"Kesa-Gatame",de:"Schärpenfesthalte",cat:"Bodenkampf",img:"bilder/Kesa_gatame.png"},
-            {jp:"Tate-Shiho-Gatame",de:"Festhalte in Reiterstellung",cat:"Bodenkampf",img:"bilder/Tate-shiho-gatame transparent 1.png"},
-            {jp:"Do-Jime",de:"Körperklammer",cat:"Bodenkampf",img:"bilder/Do Jime 2 transparent.png"}
+            {jp:"Aikido",de:"Weg der harmonischen Kraft",cat:"Grundlagen",img:"bilder/357252c205-aikido kanji.png",kyu:6},
+            {jp:"Aiki",de:"Vereinigung der Kräfte",cat:"Grundlagen",img:"bilder/Aiki.png",kyu:6},
+            {jp:"Dojo",de:"Übungsraum",cat:"Grundlagen",img:"",kyu:6},
+            {jp:"Sensei",de:"Lehrer",cat:"Grundlagen",img:"",kyu:6},
+            {jp:"Sempai",de:"Älterer Schüler",cat:"Grundlagen",img:"",kyu:6},
+            {jp:"Kohai",de:"Jüngerer Schüler",cat:"Grundlagen",img:"",kyu:6},
+            {jp:"Tatami",de:"Matte",cat:"Grundlagen",img:"",kyu:6},
+            {jp:"Gi / Dogi",de:"Übungsanzug",cat:"Grundlagen",img:"bilder/Uwagi transparent.png",kyu:6},
+            {jp:"Hakama",de:"Weite Übungshose",cat:"Grundlagen",img:"bilder/Hakama.png",kyu:5},
+            {jp:"Obi",de:"Gürtel",cat:"Grundlagen",img:"bilder/Obi.png",kyu:6},
+            {jp:"Kamae",de:"Haltung / Stellung",cat:"Grundlagen",img:"",kyu:6},
+            {jp:"Hanmi",de:"Schrittstellung",cat:"Grundlagen",img:"",kyu:6},
+            {jp:"Ma-ai",de:"Optimaler Kampfabstand",cat:"Grundlagen",img:"bilder/Maai 2.png",kyu:5},
+            {jp:"Zanshin",de:"Wachsame Aufmerksamkeit",cat:"Grundlagen",img:"",kyu:5},
+            {jp:"Ki",de:"Lebensenergie",cat:"Grundlagen",img:"bilder/Ki.jpg",kyu:6},
+            {jp:"Ai-Kamae",de:"Harmonische Stellung",cat:"Grundlagen",img:"bilder/Ai Kamae 2.png",kyu:5},
+            {jp:"Gyaku-Kamae",de:"Gespiegelte Stellung",cat:"Grundlagen",img:"bilder/Gyaku Kamae.png",kyu:5},
+            {jp:"Morihei Ueshiba",de:"O-Sensei (Begründer)",cat:"Grundlagen",img:"bilder/O_Sensei.jpg",kyu:6},
+            {jp:"Aiki-Otoshi",de:"Aushebewurf",cat:"Grundlagen",img:"bilder/Aiki Otoshi 3.png",kyu:3},
+            {jp:"Ude-Kime-Nage",de:"Armhebelwurf",cat:"Grundlagen",img:"bilder/Ude Kime Nage.png",kyu:4},
+            {jp:"Randori",de:"Freies Üben",cat:"Grundlagen",img:"bilder/Randori.png",kyu:2},
+            {jp:"Rei",de:"Verbeugung / Gruß",cat:"Etikette",img:"bilder/Rei im Stand.png",kyu:6},
+            {jp:"Mokuso",de:"Meditation",cat:"Etikette",img:"bilder/Seiza seitlich transparent.png",kyu:6},
+            {jp:"Seiza",de:"Kniesitz",cat:"Etikette",img:"bilder/Hinsetzen.png",kyu:6},
+            {jp:"Ude Osae Irimi",de:"Ikkyo (Direkt)",cat:"Techniken",img:"bilder/Ude Osae Irimi 2.png",kyu:6},
+            {jp:"Ude Osae Tenkan",de:"Ikkyo (Drehend)",cat:"Techniken",img:"bilder/Ude Osae Tenkan.png",kyu:5},
+            {jp:"Kote Mawashi",de:"Nikyo (Handgelenk)",cat:"Techniken",img:"bilder/Kote Mawashi.png",kyu:4},
+            {jp:"Kote Hineri",de:"Sankyo (Drehgriff)",cat:"Techniken",img:"bilder/Kote Hineri 3.png",kyu:3},
+            {jp:"Tekubi Osae",de:"Yonkyo (Druckpunkt)",cat:"Techniken",img:"bilder/Tekubi Osae Irimi.png",kyu:2},
+            {jp:"Irimi-Nage",de:"Eintrittswurf",cat:"Techniken",img:"bilder/Irimi Nage 4 transparent.png",kyu:6},
+            {jp:"Shiho-Nage",de:"Vier-Seiten-Wurf",cat:"Techniken",img:"bilder/Shiho Nage 3.png",kyu:5},
+            {jp:"Kote-Gaeshi",de:"Handgelenkswurf",cat:"Techniken",img:"bilder/Kote Gaeshi transparent.png",kyu:5},
+            {jp:"Tenchi-Nage",de:"Himmel-Erde-Wurf",cat:"Techniken",img:"bilder/Tenchi Nage 3.png",kyu:4},
+            {jp:"Juji-Garami",de:"Armkreuzwurf",cat:"Techniken",img:"bilder/Juji Garami transparent.png",kyu:2},
+            {jp:"Koshi-Nage",de:"Hüftwurf",cat:"Techniken",img:"bilder/Koshi Nage transparent.png",kyu:3},
+            {jp:"Mae-Mawaru-Ukemi",de:"Vorwärtsrolle",cat:"Ukemi",img:"bilder/Mae Mawaru Ukemi 2.png",kyu:6},
+            {jp:"Ushiro-Mawaru-Ukemi",de:"Rückwärtsrolle",cat:"Ukemi",img:"bilder/Ushiro Mawaru Ukemi.png",kyu:6},
+            {jp:"Mae-Ukemi",de:"Vorwärts stürzen",cat:"Ukemi",img:"bilder/mae Ukemi transparent.png",kyu:5},
+            {jp:"Katate-Tori Ai-Hanmi",de:"Einhandgriff (Gleich)",cat:"Angriffe",img:"bilder/Katate Tori Ai Hanmi.png",kyu:6},
+            {jp:"Katate-Tori Gyaku-Hanmi",de:"Einhandgriff (Gegen)",cat:"Angriffe",img:"bilder/Katate Tori Gyaku Hanmi.png",kyu:6},
+            {jp:"Shomen-Uchi",de:"Schlag auf Kopf",cat:"Angriffe",img:"bilder/Shomen Uchi.png",kyu:6},
+            {jp:"Yokomen-Uchi",de:"Seitlicher Schlag",cat:"Angriffe",img:"bilder/Yokomen Uchi.png",kyu:5},
+            {jp:"Jo",de:"Stab",cat:"Waffen",img:"bilder/Aiki Jo.png",kyu:5},
+            {jp:"Tanto",de:"Messer",cat:"Waffen",img:"bilder/Aiki Tanto Jutsu.png",kyu:4},
+            {jp:"Mune Gatame",de:"Brustfesthalte",cat:"Bodenkampf",img:"bilder/Mune Gatame 1.png",kyu:5},
+            {jp:"Kesa-Gatame",de:"Schärpenfesthalte",cat:"Bodenkampf",img:"bilder/Kesa_gatame.png",kyu:4},
+            {jp:"Mae-Geri",de:"Gerader Tritt",cat:"Angriffe",img:"bilder/mae-geri.jpg",kyu:4},
+            {jp:"Ushiro-Eri-Tori",de:"Kragen von hinten fassen",cat:"Angriffe",img:"bilder/ushiro-eri-dori.jpg",kyu:3}
         ];
 
-        // --- STATE & STORAGE ---
+        // --- STATE & DATA ---
         let appData = {
             cards: [],
             sm: {},
@@ -338,12 +335,12 @@
             revealed: false
         };
 
-        let pinInputValue = "";
+        let pinInputStr = "";
         let lexFilter = "Alle";
 
         // --- INIT ---
         function init() {
-            const saved = localStorage.getItem('zfk_v6_data');
+            const saved = localStorage.getItem('zfk_v7_data');
             if(saved) {
                 appData = JSON.parse(saved);
             } else {
@@ -352,11 +349,12 @@
             setupPinPad();
             updateStats();
             initChart();
+            renderKyuNav();
             showScreen('home');
         }
 
         function save() {
-            localStorage.setItem('zfk_v6_data', JSON.stringify(appData));
+            localStorage.setItem('zfk_v7_data', JSON.stringify(appData));
         }
 
         // --- NAVIGATION ---
@@ -370,18 +368,19 @@
             if(id === 'lexikon') updateLexikon();
             if(id === 'admin') renderAdmin();
         }
+        window.showScreen = showScreen;
 
-        // --- STATS & CHART ---
+        // --- CHART & STATS ---
         let progressChart;
         function initChart() {
             const ctx = document.getElementById('progressChart').getContext('2d');
             progressChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Gelernt', 'Noch offen'],
+                    labels: ['Gelernt', 'Offen'],
                     datasets: [{
                         data: [0, 100],
-                        backgroundColor: ['#e31e24', '#f4f4f4'],
+                        backgroundColor: ['#e31e24', '#f0f0f0'],
                         borderWidth: 0,
                         cutout: '80%'
                     }]
@@ -396,10 +395,11 @@
         }
 
         function updateStats() {
-            const learned = appData.cards.filter(c => appData.sm[c.jp]?.rep > 0).length;
+            const learned = appData.cards.filter(c => (appData.sm[c.jp]?.rep || 0) > 0).length;
             const due = appData.cards.filter(c => {
+                if(c.kyu < appData.stats.kyu) return false;
                 const s = appData.sm[c.jp];
-                return s && s.due <= Date.now();
+                return !s || s.due <= Date.now();
             }).length;
 
             document.getElementById('stat-pts').textContent = appData.stats.pts;
@@ -408,7 +408,7 @@
         }
 
         function updateChart() {
-            const learned = appData.cards.filter(c => appData.sm[c.jp]?.rep > 0).length;
+            const learned = appData.cards.filter(c => (appData.sm[c.jp]?.rep || 0) > 0).length;
             const total = appData.cards.length;
             const pct = total === 0 ? 0 : Math.round((learned / total) * 100);
             
@@ -416,56 +416,95 @@
             progressChart.update();
         }
 
+        function renderKyuNav() {
+            const kyus = [6, 5, 4, 3, 2, 1];
+            document.getElementById('kyu-selector').innerHTML = kyus.map(k => `
+                <button onclick="setKyu(${k})" class="px-5 py-2 rounded-full font-black text-xs whitespace-nowrap bg-stone-100 ${appData.stats.kyu === k ? 'border-2 border-[#e31e24] text-[#e31e24] bg-white' : ''}">
+                    ${k}. KYU
+                </button>
+            `).join('');
+        }
+        window.setKyu = function(k) {
+            appData.stats.kyu = k;
+            save();
+            renderKyuNav();
+            updateStats();
+        };
+
         // --- SESSION MODES ---
-        function startMode(mode) {
+        window.startMode = function(mode) {
             session.type = mode;
             session.score = 0;
             session.idx = 0;
             session.revealed = false;
 
+            // Filter nach Kyu: Nur Karten die dem gewählten Kyu oder niedriger (numerisch höher) entsprechen
+            session.list = appData.cards.filter(c => c.kyu >= appData.stats.kyu);
+
             if(mode === 'learn') {
-                session.list = appData.cards.filter(c => {
-                    const s = appData.sm[c.jp];
-                    return !s || s.due <= Date.now();
-                }).sort(() => Math.random() - 0.5);
-                
-                if(session.list.length === 0) return alert("Alle Karten aktuell gelernt!");
+                session.list = session.list.filter(c => !appData.sm[c.jp] || appData.sm[c.jp].due <= Date.now());
+            }
+            
+            session.list.sort(() => Math.random() - 0.5);
+            if(mode !== 'learn') session.list = session.list.slice(0, 10);
+
+            if(session.list.length === 0) return alert("Alle Karten aktuell gelernt!");
+            
+            if(mode === 'learn') {
                 showScreen('learn');
                 renderLearnCard();
-            } else if(mode === 'quiz' || mode === 'duell') {
-                session.list = [...appData.cards].sort(() => Math.random() - 0.5);
+            } else {
                 showScreen('quiz');
                 if(mode === 'duell') startDuellTimer();
                 renderQuiz();
             }
-        }
+        };
 
         // --- LERNMODUS ---
         function renderLearnCard() {
             const card = session.list[session.idx];
-            document.getElementById('learn-img').src = card.img || '';
-            document.getElementById('learn-img').style.display = card.img ? 'block' : 'none';
-            document.getElementById('learn-jp').textContent = card.jp;
-            document.getElementById('learn-de').textContent = card.de;
-            document.getElementById('learn-cat').textContent = card.cat;
-            document.getElementById('session-counter').textContent = `${session.idx + 1}/${session.list.length}`;
-            document.getElementById('session-progress').style.width = ((session.idx + 1) / session.list.length * 100) + "%";
+            
+            // 1. Reset UI (Fix Aufblitzen)
+            document.getElementById('learn-jp').textContent = "";
+            document.getElementById('learn-de').textContent = "";
+            document.getElementById('learn-img').src = "";
+            document.getElementById('learn-img').style.display = 'none';
+            const phs = document.querySelectorAll('#learn-image-container .fallback-icon');
+            phs.forEach(p => p.remove());
 
-            // Reset Reveal
-            session.revealed = false;
+            const ratingBox = document.getElementById('rating-controls');
+            ratingBox.classList.remove('show');
+            ratingBox.classList.add('hidden');
             document.getElementById('btn-reveal').classList.remove('hidden');
-            document.getElementById('rating-controls').classList.add('hidden');
-            document.getElementById('rating-controls').classList.remove('show');
+
+            // 2. Timeout für Render-Zyklus
+            setTimeout(() => {
+                document.getElementById('learn-jp').textContent = card.jp;
+                document.getElementById('learn-de').textContent = card.de;
+                if(card.img) {
+                    document.getElementById('learn-img').src = card.img;
+                    document.getElementById('learn-img').style.display = 'block';
+                } else {
+                    window.handleImageError(document.getElementById('learn-img'));
+                }
+                
+                document.getElementById('learn-cat').textContent = card.cat;
+                document.getElementById('learn-kyu-tag').textContent = card.kyu + ". KYU";
+                document.getElementById('session-counter').textContent = `${session.idx + 1}/${session.list.length}`;
+                document.getElementById('session-progress').style.width = ((session.idx + 1) / session.list.length * 100) + "%";
+                
+                session.revealed = false;
+            }, 100);
         }
 
-        function revealSolution() {
+        window.revealSolution = function() {
             session.revealed = true;
             document.getElementById('btn-reveal').classList.add('hidden');
             document.getElementById('rating-controls').classList.remove('hidden');
             setTimeout(() => document.getElementById('rating-controls').classList.add('show'), 10);
-        }
+        };
 
-        function handleRate(q) {
+        window.handleRate = function(q) {
             const card = session.list[session.idx];
             updateSM(card.jp, q);
             if(q >= 3) appData.stats.pts += 5;
@@ -477,7 +516,7 @@
                 alert("Sitzung beendet!");
                 showScreen('home');
             }
-        }
+        };
 
         function updateSM(id, q) {
             let s = appData.sm[id] || { interval: 0, ef: 2.5, rep: 0, due: 0 };
@@ -503,23 +542,24 @@
 
             document.getElementById('quiz-q').textContent = correct.jp;
             document.getElementById('quiz-cat-label').textContent = correct.cat;
-            document.getElementById('quiz-score').textContent = session.score + " Pkt";
+            document.getElementById('quiz-score').textContent = session.score + " PKT";
 
             const container = document.getElementById('quiz-options');
             container.innerHTML = options.map(opt => `
-                <button onclick="checkQuiz('${opt.jp}', '${correct.jp}', this)" class="quiz-box bg-white w-full p-5 rounded-2xl font-bold border-2 border-gray-100 transition-all">
+                <button onclick="checkQuiz('${opt.jp}', '${correct.jp}', this)" class="bg-white w-full p-4 rounded-2xl font-black text-sm border-2 border-gray-100 transition-all btn-shadow uppercase">
                     ${opt.de}
                 </button>
             `).join('');
         }
+        window.renderQuiz = renderQuiz;
 
-        function checkQuiz(sel, cor, el) {
+        window.checkQuiz = function(sel, cor, el) {
             if(sel === cor) {
-                el.classList.add('correct', 'bg-green-500', 'text-white');
+                el.classList.add('bg-green-500', 'text-white', 'border-green-500');
                 session.score += 10;
                 appData.stats.pts += 2;
             } else {
-                el.classList.add('wrong', 'bg-red-500', 'text-white');
+                el.classList.add('bg-red-500', 'text-white', 'border-red-500');
             }
             setTimeout(() => {
                 session.idx++;
@@ -530,35 +570,36 @@
                     renderQuiz();
                 }
             }, 600);
-        }
+        };
 
         function startDuellTimer() {
             let time = 60;
-            document.getElementById('quiz-timer').textContent = time + "s";
+            const timerEl = document.getElementById('quiz-timer');
+            timerEl.textContent = time + "s";
             session.timer = setInterval(() => {
                 time--;
-                document.getElementById('quiz-timer').textContent = time + "s";
+                timerEl.textContent = time + "s";
                 if(time <= 0) {
                     clearInterval(session.timer);
-                    alert("Zeit um! Dein Score: " + session.score);
+                    alert("Zeit um! Score: " + session.score);
                     showScreen('home');
                 }
             }, 1000);
         }
 
-        function exitSession() {
+        window.exitSession = function() {
             clearInterval(session.timer);
             showScreen('home');
-        }
+        };
 
         // --- LEXIKON ---
-        function updateLexikon() {
+        window.updateLexikon = function() {
             const query = document.getElementById('lex-search').value.toLowerCase();
             const cats = ['Alle', ...new Set(appData.cards.map(c => c.cat))];
             
             document.getElementById('lex-cats').innerHTML = cats.map(c => `
-                <button onclick="setLexFilter('${c}')" class="filter-chip px-5 py-2 rounded-full font-bold text-xs whitespace-nowrap ${lexFilter === c ? 'bg-black text-white' : 'bg-white border border-gray-100'}">
-                    ${c.toUpperCase()}
+                <button onclick="setLexFilter('${c}')" class="px-5 py-2 rounded-full font-black text-[10px] whitespace-nowrap uppercase tracking-widest ${lexFilter === c ? 'bg-black text-white' : 'bg-white border border-gray-100'}">
+                    ${c}
                 </button>
             `).join('');
 
@@ -569,140 +610,160 @@
             }).sort((a,b) => a.jp.localeCompare(b.jp));
 
             document.getElementById('lex-list').innerHTML = filtered.map(c => `
-                <div class="lex-item bg-white p-4 rounded-2xl border border-gray-50 flex items-center gap-4">
-                    ${c.img ? `<img src="${c.img}" class="w-12 h-12 rounded-lg object-cover" onerror="this.style.display='none'">` : '<div class="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center">🥋</div>'}
+                <div class="bg-white p-4 rounded-3xl border border-gray-50 flex items-center gap-4 shadow-sm">
+                    <div class="w-12 h-12 bg-stone-50 rounded-xl flex items-center justify-center overflow-hidden">
+                        ${c.img ? `<img src="${c.img}" class="w-full h-full object-cover" onerror="window.handleImageError(this)">` : '<div class="text-xl">🥋</div>'}
+                    </div>
                     <div class="flex-1">
                         <h4 class="font-black text-sm">${c.jp}</h4>
-                        <p class="text-xs text-gray-400">${c.de}</p>
+                        <p class="text-[11px] text-gray-400 font-bold">${c.de}</p>
                     </div>
-                    <span class="text-[8px] font-black text-white bg-black px-2 py-1 rounded-md uppercase">${c.cat}</span>
+                    <span class="text-[8px] font-black text-white bg-black px-2 py-1 rounded-md uppercase">${c.kyu}. Kyu</span>
                 </div>
             `).join('');
-        }
+        };
 
-        function setLexFilter(cat) {
+        window.setLexFilter = function(cat) {
             lexFilter = cat;
             updateLexikon();
-        }
+        };
 
         // --- PIN PAD ---
         function setupPinPad() {
             const grid = document.getElementById('pin-grid');
-            [1,2,3,4,5,6,7,8,9,'C',0,'OK'].forEach(val => {
-                const btn = document.createElement('button');
-                btn.className = "w-16 h-16 rounded-full bg-white border-2 border-gray-100 font-black text-xl hover:border-[#e31e24] transition-colors";
-                btn.textContent = val;
-                btn.onclick = () => handlePin(val);
-                grid.appendChild(btn);
+            [1,2,3,4,5,6,7,8,9,'C',0,'OK'].forEach(v => {
+                const b = document.createElement('button');
+                b.className = "w-16 h-16 rounded-full bg-white border-2 border-gray-100 font-black text-xl flex items-center justify-center btn-shadow hover:border-[#e31e24]";
+                b.textContent = v;
+                b.onclick = () => handlePin(v);
+                grid.appendChild(b);
             });
         }
 
-        function handlePin(val) {
-            if(val === 'C') pinInputEleValue = "";
-            else if(val === 'OK') checkPin();
-            else if(pinInputEleValue.length < 4) pinInputEleValue += val;
+        function handlePin(v) {
+            if(v === 'C') pinInputStr = "";
+            else if(v === 'OK') checkPin();
+            else if(pinInputStr.length < 4) pinInputStr += v;
             
             const dots = document.querySelectorAll('.pin-dot');
-            dots.forEach((d, i) => d.classList.toggle('active', i < pinInputEleValue.length));
+            dots.forEach((d, i) => d.classList.toggle('active', i < pinInputStr.length));
             
-            if(pinInputEleValue.length === 4 && val !== 'OK') {
-                setTimeout(checkPin, 300);
-            }
+            if(pinInputStr.length === 4 && v !== 'OK') setTimeout(checkPin, 300);
         }
-        
-        let pinInputEleValue = "";
+
         function checkPin() {
-            if(pinInputEleValue === appData.pin) {
-                pinInputEleValue = "";
-                updatePinDots();
+            if(pinInputStr === appData.pin) {
+                pinInputStr = "";
+                document.querySelectorAll('.pin-dot').forEach(d => d.classList.remove('active'));
                 showScreen('admin');
             } else {
                 alert("PIN FALSCH");
-                pinInputEleValue = "";
-                updatePinDots();
+                pinInputStr = "";
+                document.querySelectorAll('.pin-dot').forEach(d => d.classList.remove('active'));
             }
-        }
-        
-        function updatePinDots() {
-            const dots = document.querySelectorAll('.pin-dot');
-            dots.forEach((d, i) => d.classList.toggle('active', i < pinInputEleValue.length));
         }
 
         // --- ADMIN ---
         function renderAdmin() {
             const list = document.getElementById('admin-list');
             list.innerHTML = appData.cards.map((c, i) => `
-                <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100">
-                    <div>
-                        <p class="text-sm font-black">${c.jp}</p>
-                        <p class="text-[10px] text-gray-400">${c.de}</p>
+                <div class="bg-white p-4 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-stone-50 rounded-lg overflow-hidden flex items-center justify-center">
+                            ${c.img ? `<img src="${c.img}" class="w-full h-full object-cover" onerror="window.handleImageError(this)">` : '<span class="text-xs">🥋</span>'}
+                        </div>
+                        <div>
+                            <p class="text-xs font-black">${c.jp}</p>
+                            <p class="text-[9px] text-gray-400 font-bold italic">${c.de} (${c.kyu}. Kyu)</p>
+                        </div>
                     </div>
-                    <div class="flex gap-2">
-                        <button onclick="editTerm(${i})" class="text-blue-500 text-lg">✏️</button>
-                        <button onclick="deleteTerm(${i})" class="text-red-500 text-lg">🗑️</button>
+                    <div class="flex gap-4">
+                        <button onclick="window.editTerm(${i})" class="text-blue-500 text-lg">✏️</button>
+                        <button onclick="window.deleteTerm(${i})" class="text-red-500 text-lg">🗑️</button>
                     </div>
                 </div>
             `).join('');
         }
 
-        window.editTerm = function(i) {
-            const c = appData.cards[i];
-            const jp = prompt("Japanisch:", c.jp);
-            const de = prompt("Deutsch:", c.de);
-            const cat = prompt("Kategorie:", c.cat);
-            if(jp && de) {
-                appData.cards[i] = {...c, jp, de, cat: cat || c.cat};
-                save(); renderAdmin();
+        window.openAdminForm = function(idx) {
+            document.getElementById('admin-form').classList.remove('hidden');
+            document.getElementById('admin-controls').classList.add('hidden');
+            document.getElementById('edit-index').value = idx;
+            
+            if(idx >= 0) {
+                const c = appData.cards[idx];
+                document.getElementById('form-title').textContent = "BEGRIFF BEARBEITEN";
+                document.getElementById('inp-jp').value = c.jp;
+                document.getElementById('inp-de').value = c.de;
+                document.getElementById('inp-kyu').value = c.kyu;
+                document.getElementById('inp-cat').value = c.cat;
+                document.getElementById('inp-img').value = c.img;
+            } else {
+                document.getElementById('form-title').textContent = "NEUER BEGRIFF";
+                document.getElementById('inp-jp').value = "";
+                document.getElementById('inp-de').value = "";
+                document.getElementById('inp-kyu').value = "6";
+                document.getElementById('inp-cat').value = "Grundlagen";
+                document.getElementById('inp-img').value = "bilder/";
             }
-        }
+        };
 
-        window.deleteTerm = function(i) {
-            if(confirm("Löschen?")) {
-                appData.cards.splice(i, 1);
-                save(); renderAdmin();
-            }
-        }
+        window.closeAdminForm = function() {
+            document.getElementById('admin-form').classList.add('hidden');
+            document.getElementById('admin-controls').classList.remove('hidden');
+        };
 
-        function addNewTerm() {
-            const jp = prompt("Japanisch:");
-            const de = prompt("Deutsch:");
-            const cat = prompt("Kategorie:", "Grundlagen");
-            if(jp && de) {
-                appData.cards.push({jp, de, cat, img: ""});
-                save(); renderAdmin();
-            }
-        }
+        window.saveAdminForm = function() {
+            const idx = parseInt(document.getElementById('edit-index').value);
+            const data = {
+                jp: document.getElementById('inp-jp').value,
+                de: document.getElementById('inp-de').value,
+                kyu: parseInt(document.getElementById('inp-kyu').value) || 6,
+                cat: document.getElementById('inp-cat').value,
+                img: document.getElementById('inp-img').value
+            };
+
+            if(!data.jp || !data.de) return alert("Bitte fülle Japanisch und Deutsch aus!");
+
+            if(idx >= 0) appData.cards[idx] = data;
+            else appData.cards.push(data);
+
+            save();
+            renderAdmin();
+            closeAdminForm();
+        };
+
+        window.addNewTerm = function() {
+            openAdminForm(-1);
+        };
 
         // --- TOOLS ---
-        function playVoice() {
+        window.playVoice = function() {
             const text = document.getElementById('learn-jp').textContent;
+            if(!text) return;
             const u = new SpeechSynthesisUtterance(text);
-            u.lang = 'ja-JP';
-            u.rate = 0.8;
+            u.lang = 'ja-JP'; u.rate = 0.8;
             window.speechSynthesis.speak(u);
-        }
+        };
 
-        function exportData() {
+        window.exportData = function() {
             const blob = new Blob([JSON.stringify(appData)], {type:'application/json'});
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = `aikido_backup_${new Date().toISOString().slice(0,10)}.json`;
+            a.download = `zfk_aikido_backup.json`;
             a.click();
-        }
+        };
 
-        function importData(e) {
+        window.importData = function(e) {
             const reader = new FileReader();
             reader.onload = (ev) => {
                 try {
                     const d = JSON.parse(ev.target.result);
-                    if(d.cards) {
-                        appData = d;
-                        save(); location.reload();
-                    }
+                    if(d.cards) { appData = d; save(); location.reload(); }
                 } catch(err) { alert("Datei ungültig."); }
             };
-            reader.readAsText(e.target.files[0]);
-        }
+            if(e.target.files[0]) reader.readAsText(e.target.files[0]);
+        };
 
         window.onload = init;
     </script>
